@@ -1,0 +1,17 @@
+const items = {
+  old_photo: { name: "旧照�?, type: "normal", trust: 8, danger: 3, count: 3 },
+  cracked_lipstick: { name: "裂口唇膏", type: "bond", trust: 25, danger: 5, count: 2 },
+  forbidden_incense: { name: "禁香", type: "forbidden", trust: 45, danger: 15, count: 1 },
+  balance_charm: { name: "制衡�?, type: "balance", trust: 2, danger: -20, count: 2 },
+  paper_doll: { name: "缠线纸偶", type: "bond", trust: 18, danger: 4, count: 6 },
+  rust_key: { name: "锈钥�?, type: "normal", trust: 14, danger: 2, count: 5 },
+  rain_tape: { name: "雨声磁带", type: "bond", trust: 22, danger: 3, count: 4 },
+  mirror_shard: { name: "裂镜�?, type: "forbidden", trust: 30, danger: 9, count: 3 },
+  elevator_coin: { name: "电梯硬币", type: "normal", trust: 16, danger: 2, count: 5 },
+  red_thread: { name: "红线", type: "normal", trust: 12, danger: 1, count: 8 },
+  night_badge: { name: "夜班工牌", type: "bond", trust: 28, danger: 6, count: 3 },
+  sealed_note: { name: "封存便签", type: "balance", trust: 20, danger: -4, count: 4 },
+  shadow_contract: { name: "诡影之契", type: "ticket", count: 15 },
+  taboo_letter: { name: "禁忌之笺", type: "ticket", count: 10 }
+};
+

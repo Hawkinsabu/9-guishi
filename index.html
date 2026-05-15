@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>九号楼诡事</title>
+  <link rel="stylesheet" href="./styles.css?v=119">
+</head>
+<body>
+  <div id="app" class="app">
+    <main id="stage" class="stage" aria-live="polite">
+      <section id="titleScreen" class="title-screen">
+        <div class="title-bg"></div>
+        <div class="title-content">
+          <p class="kicker">No.9 Building Case File</p>
+          <h1>九号楼诡事</h1>
+          <p class="title-copy">雨停以后，九号楼多亮了一层。</p>
+          <button id="enterGameBtn" class="enter-game-btn"><span class="enter-game-visual">进入游戏</span></button>
+          <span id="enterHint" class="enter-hint">点击后自动读取本地存档</span>
+        </div>
+      </section>
+
+      <div id="scene" class="scene hidden">
+        <div id="bgLayer" class="bg-layer bg-building"></div>
+        <div id="fxLayer" class="fx-layer"></div>
+        <div id="charLayer" class="char-layer"></div>
+        <section id="dialogue" class="dialogue">
+          <div class="dialogue-tools">
+            <button id="saveStoryBtn" class="icon-btn" title="存档">S</button>
+            <button id="loadStoryBtn" class="icon-btn" title="读档">L</button>
+            <button id="autoBtn" class="icon-btn" title="自动播放">A</button>
+            <button id="skipBtn" class="icon-btn" title="快进">F</button>
+          </div>
+          <div id="speaker" class="speaker">系统</div>
+          <div id="line" class="line"></div>
+          <div id="choices" class="choices"></div>
+          <div class="continue-mark">点击 / 空格 / 回车</div>
+        </section>
+      </div>
+
+      <section id="home" class="home hidden">
+        <section id="mainHub" class="main-hub">
+          <img class="hub-bg" src="./assets/main_ui/bg_main.jpg" alt="九号楼诡事主界面">
+          <img id="hubPressLayer" class="hub-press-layer hidden" src="./assets/main_ui/main_hub_story_press.png" alt="">
+          <img class="hub-avatar-frame" src="./assets/main_ui/frame_avatar.png" alt="">
+          <div class="hub-player-copy">
+            <strong>玩家名字</strong>
+          </div>
+          <img class="hub-gold-frame" src="./assets/main_ui/frame_gold.png" alt="">
+          <span class="hub-gold-value">152234</span>
+          <img class="hub-spirit-frame" src="./assets/main_ui/frame_spirit.png" alt="">
+          <span class="hub-spirit-value">152234</span>
+          <img class="hub-bottom-pattern" src="./assets/main_ui/bg_pattern.png" alt="">
+          <button class="hub-hotspot hub-profile" data-action="profile" title="玩家信息"></button>
+          <button class="hub-hotspot hub-currency-gold" data-action="currency" title="货币"></button>
+          <button class="hub-hotspot hub-currency-spirit" data-action="currency" title="货币"></button>
+          <button class="hub-hotspot hub-story" data-tab="Story" title="剧情"></button>
+          <button class="hub-hotspot hub-raise" data-tab="Raise" title="养成"></button>
+          <button class="hub-hotspot hub-gacha" data-tab="Gacha" title="召唤"></button>
+          <button class="hub-hotspot hub-bag" data-tab="Bag" title="背包"></button>
+          <button class="hub-hotspot hub-archive" data-action="archive" title="档案室"></button>
+        </section>
+
+        <header class="top-status">
+          <div class="status-left">
+            <div class="player-avatar">九</div>
+            <div class="player-block">
+              <strong>玩家 ID N09-0001</strong>
+              <span id="statusMode">剧情进度</span>
+            </div>
+            <span id="statusTitle" class="status-pill">当前章节</span>
+            <span id="statusMeta">当前章节 1</span>
+          </div>
+          <div class="status-right">
+            <span id="statusTime">子时 02:13</span>
+            <span class="currency-chip"><i>契</i>诡影之契 <strong id="contractCount">0</strong></span>
+            <span class="currency-chip"><i>笺</i>禁忌之笺 <strong id="letterCount">0</strong></span>
+            <button id="mainMenuBtn" class="top-btn" title="返回剧情页">主菜单</button>
+            <span class="save-chip"><small>存档</small><strong id="saveState">本地</strong></span>
+          </div>
+        </header>
+
+        <div class="content-area">
+          <section id="tabStory" class="tab-panel"></section>
+          <section id="tabRaise" class="tab-panel hidden"></section>
+          <section id="tabGacha" class="tab-panel hidden"></section>
+          <section id="tabBag" class="tab-panel hidden"></section>
+          <div id="contextHint" class="context-hint"></div>
+        </div>
+      </section>
+    </main>
+
+    <nav id="nav" class="bottom-nav hidden" aria-label="主界面分页">
+      <button data-tab="Story" class="active"><span>卷</span><strong>剧情</strong></button>
+      <button data-tab="Raise"><span>灵</span><strong>养成</strong></button>
+      <button data-tab="Gacha"><span>契</span><strong>抽卡</strong></button>
+      <button data-tab="Bag"><span>匣</span><strong>背包</strong></button>
+    </nav>
+
+    <aside id="logPanel" class="log-panel hidden">
+      <strong>脚本日志</strong>
+      <div id="logList"></div>
+    </aside>
+
+    <div id="modalLayer" class="modal-layer hidden"></div>
+    <div id="toastLayer" class="toast-layer hidden"></div>
+  </div>
+
+  <script src="./app.js?v=125"></script>
+</body>
+</html>

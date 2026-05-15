@@ -1,0 +1,2723 @@
+﻿const STORAGE_KEY = "no9-building-save-v1";
+const UI_LAYOUT_KEY = "no9-building-ui-layout-v1";
+const UI_DEBUG_ENABLED_KEY = "no9-building-ui-debug-enabled";
+
+const uiDebugTargets = [
+  { id: "hub.avatar", selector: ".hub-avatar-frame", label: "\u5934\u50cf\u6846" },
+  { id: "hub.player", selector: ".hub-player-copy", label: "\u73a9\u5bb6\u540d" },
+  { id: "hub.gold", selector: ".hub-gold-frame", label: "\u91d1\u5e01\u6846" },
+  { id: "hub.goldValue", selector: ".hub-gold-value", label: "\u91d1\u5e01\u6570" },
+  { id: "hub.spirit", selector: ".hub-spirit-frame", label: "\u7075\u5e01\u6846" },
+  { id: "hub.spiritValue", selector: ".hub-spirit-value", label: "\u7075\u5e01\u6570" },
+  { id: "hub.tabs", selector: ".hub-bottom-pattern", label: "\u5e95\u90e8\u5206\u9875" },
+  { id: "soul.back", selector: ".soul-back", label: "\u8fd4\u56de" },
+  { id: "soul.title", selector: ".soul-titlebar", label: "\u5fa1\u9b42\u6807\u9898" },
+  { id: "soul.titleText", selector: ".soul-titlebar strong", label: "\u5fa1\u9b42\u6587\u5b57" },
+  { id: "soul.gold", selector: ".soul-gold", label: "\u5fa1\u9b42\u91d1\u5e01" },
+  { id: "soul.goldText", selector: ".soul-gold span", label: "\u91d1\u5e01\u6570\u5b57" },
+  { id: "soul.spirit", selector: ".soul-spirit", label: "\u5fa1\u9b42\u7075" },
+  { id: "soul.spiritText", selector: ".soul-spirit span", label: "\u7075\u6570\u5b57" },
+  { id: "soul.name", selector: ".soul-name-plate", label: "\u540d\u5b57\u7ad6\u724c" },
+  { id: "soul.nameText", selector: ".soul-name-plate strong", label: "\u955c\u4e2d\u5f71\u6587\u5b57" },
+  { id: "soul.prev", selector: ".soul-page-prev", label: "\u5de6\u7ffb\u9875" },
+  { id: "soul.next", selector: ".soul-page-next", label: "\u53f3\u7ffb\u9875" },
+  { id: "soul.panel", selector: ".soul-feed-panel", label: "\u5fa1\u9b42\u9762\u677f" },
+  { id: "soul.likeTitle", selector: ".soul-title", label: "\u597d\u611f\u79f0\u53f7" },
+  { id: "soul.expText", selector: ".soul-exp p", label: "\u7ecf\u9a8c\u6570\u5b57" },
+  { id: "soul.infoBody", selector: ".soul-info-body", label: "\u60c5\u62a5\u5185\u5bb9" },
+  { id: "soul.infoFooter", selector: ".soul-info-footer", label: "\u60c5\u62a5\u5e95\u90e8" },
+  { id: "soul.items", selector: ".soul-item-area", label: "\u7269\u54c1\u533a" },
+  { id: "soul.tipText", selector: ".soul-tip", label: "\u5e95\u90e8\u63d0\u793a" },
+  { id: "soul.bioList", selector: ".soul-bio-list", label: "\u4f20\u8bb0\u5217\u8868" },
+  { id: "soul.tabs", selector: ".soul-side-tabs", label: "\u53f3\u4fa7\u6807\u7b7e" },
+  { id: "soul.tabText", selector: ".soul-side-tabs span", label: "\u6807\u7b7e\u6587\u5b57" },
+  { id: "summon.back", selector: ".summon-back", label: "\u53ec\u5524\u8fd4\u56de" },
+  { id: "summon.title", selector: ".summon-titlebar", label: "\u53ec\u5524\u6807\u9898" },
+  { id: "summon.gold", selector: ".summon-gold", label: "\u53ec\u5524\u91d1\u5e01" },
+  { id: "summon.spirit", selector: ".summon-spirit", label: "\u53ec\u5524\u7075" },
+  { id: "summon.preview", selector: ".summon-preview-panel", label: "\u5956\u52b1\u9884\u89c8" },
+  { id: "summon.fx", selector: ".summon-fx", label: "\u53ec\u5524\u9635" },
+  { id: "summon.once", selector: ".summon-once", label: "\u53ec\u5524\u4e00\u6b21" },
+  { id: "summon.ten", selector: ".summon-ten", label: "\u53ec\u5524\u5341\u6b21" },
+  { id: "summon.pools", selector: ".summon-pool-panel", label: "\u53ec\u5524\u5361\u6c60" },
+  { id: "bag.back", selector: ".bag-art-back", label: "\u80cc\u5305\u8fd4\u56de" },
+  { id: "bag.title", selector: ".bag-art-titlebar", label: "\u80cc\u5305\u6807\u9898" },
+  { id: "bag.gold", selector: ".bag-art-gold", label: "\u80cc\u5305\u91d1\u5e01" },
+  { id: "bag.spirit", selector: ".bag-art-spirit", label: "\u80cc\u5305\u7075" },
+  { id: "bag.grid", selector: ".bag-art-grid-panel", label: "\u80cc\u5305\u683c\u5b50" },
+  { id: "bag.info", selector: ".bag-art-info", label: "\u80cc\u5305\u8be6\u60c5" },
+  { id: "bag.tabs", selector: ".bag-art-tabs", label: "\u80cc\u5305\u5206\u7c7b" },
+  { id: "story.chapters", selector: ".story-chapter-list", label: "\u7ae0\u8282\u5217\u8868" },
+  { id: "story.turns", selector: ".story-turn-panel", label: "\u56de\u5408\u9762\u677f" }
+];
+
+let uiDebugEnabled = false;
+let uiDebugLayout = {};
+let uiDebugSelectedId = null;
+
+const storyScripts = {
+  opening: `
+# 涔濆彿妤煎紑绡?bg show building fade 1
+char show mirror center fade
+鏃佺櫧 闆ㄥ仠鍦ㄥ噷鏅ㄤ袱鐐瑰崄涓夊垎銆備節鍙锋ゼ鐨勭數姊紝鍗村湪娌′汉鎸夐敭鐨勬椂鍊欒嚜宸变笅琛屻€?淇濆畨鑰佺Е 浣犳槸鏂版潵鐨勫鐝紵璁颁綇锛屽崄浜岀偣浠ュ悗鍒煡涔濆眰銆?鎴?涓轰粈涔堬紵
+淇濆畨鑰佺Е 涔濇ゼ浣忔埛鏃╁氨鎼┖浜嗐€傚彲姣忔櫄锛岄棬缂濅笅闈㈤兘浼氭湁浜哄線澶栧鎶曡瘔鍗曘€?choice 鎺ヨ繃閽ュ寵:take_key 鎷掔粷涓婃ゼ:refuse
+label refuse
+鏃佺櫧 浣犻€€鍚庡崐姝ワ紝閽ュ寵鍗村凡缁忚汉鍦ㄦ帉蹇冦€傚啺寰楀儚涓€鎴澶淬€?jump take_key
+label take_key
+bg show corridor fade 1
+鏃佺櫧 鐢垫闂ㄥ悎涓娿€傛ゼ灞傛暟瀛椾竴鏍间竴鏍艰烦鍔紝鍦ㄢ€?鈥濆仠浣忓悗锛屽張澶氫寒浜嗕竴鏍间笉瀛樺湪鐨勬暟瀛椼€?闀滀腑褰?浣犵粓浜庡洖鏉ヤ簡銆?鎴?鎴戜笉璁よ瘑浣犮€?闀滀腑褰?浣嗕綘璁よ瘑杩欐爧妤笺€傛垨鑰呰锛岃繖鏍嬫ゼ璁よ瘑浣犮€?wait 0.4
+bg show room fade 1
+鏃佺櫧 904 瀹ょ殑闂ㄦ病鏈夐攣銆傚鍘呬腑澶憜鐫€涓€闈㈣挋灏樼殑闀滃瓙锛岄暅闈㈤噷绔欑潃姣斾綘鎱㈠崐鎷嶇殑浜恒€?闀滀腑褰?鎶婃垜甯﹀嚭鍘汇€傛垜浼氬憡璇変綘锛屼節鍙锋ゼ涓轰粈涔堝皯浜嗕竴灞傘€?end
+`,
+  "1-1": `
+bg show corridor fade 0.8
+char show mirror right fade
+鏃佺櫧 璧板粖鐨勫０鎺х伅涓€鐩忔帴涓€鐩忎寒璧凤紝姣忎竴鐩忎笅闈㈤兘绔欑潃涓€涓箍鑴氬嵃銆?鎴?璋佸湪閭ｉ噷锛?闀滀腑褰?涓嶈鍠婂悕瀛椼€傝繖閲岀殑涓滆タ锛屼細鍊熷悕瀛楅潬杩戜綘銆?choice 鏌ョ湅904闂ㄧ墝:door 杩介殢鑴氬嵃:footprint
+label door
+鏃佺櫧 闂ㄧ墝鑳屽悗澶圭潃涓€寮犳棫鐓х墖銆傜収鐗囬噷锛屼綘绔欏湪涔濆彿妤煎皝椤朵华寮忕殑浜虹兢涓ぎ銆?jump endline
+label footprint
+鏃佺櫧 鑴氬嵃鍋滃湪瀹夊叏鍑哄彛锛屽涓婂啓鐫€锛氫笉瑕佺浉淇＄數姊噷鐨勮嚜宸便€?label endline
+鏃佺櫧 浣犺幏寰椾簡閬撳叿锛氭棫鐓х墖銆傞暅涓奖鐨勫淇′换搴︿笂鍗囷紝浣嗗嵄娈嗕篃寮€濮嬭褰曚綘鐨勫懠鍚搞€?end
+`,
+  "1-2": `
+bg show room fade 0.8
+char show mirror center fade
+鏃佺櫧 闀滃瓙鑳岄潰鐨勫皝鏉¤姘存苯娉″紑锛岄湶鍑轰竴涓蹭綇鎴风紪鍙枫€?闀滀腑褰?姣忎竴涓紪鍙凤紝閮芥槸涓€涓病鑳界寮€涔濆彿妤肩殑浜恒€?鎴?閭ｄ綘鏄摢涓€涓紵
+闀滀腑褰?鎴戞槸绗節涓紝涔熸槸绗竴涓€?鏃佺櫧 濂逛几鎵嬭Е纰伴暅闈紝浣犵殑褰卞瓙鍏堜竴姝ユ姮澶淬€?end
+`,
+  "1-3": `
+bg show building fade 0.8
+鏃佺櫧 澶╁彴闂ㄥ悗娌℃湁澶╃┖锛屽彧鏈変竴鏉″悜涓嬪欢浼哥殑妤兼銆?淇濆畨鑰佺Е 濡傛灉浣犵湅瑙佸崄涓夊眰锛岀珛鍒婚棴鐪兼暟鍒颁節銆?鏃佺櫧 鍙綘杩樻病寮€濮嬫暟锛屾ゼ姊繁澶勫凡缁忔湁浜烘浛浣犳暟瀹屼簡銆?end
+`,
+  "2-1": `
+bg show corridor fade 0.8
+char show mirror left fade
+\u65c1\u767d \u7b2c\u4e8c\u4e2a\u6d4b\u8bd5\u7ae0\u8282\u5f00\u542f\u3002\u6863\u6848\u5ba4\u91cc\u591a\u51fa\u4e86\u4e00\u53ea\u6ca1\u6709\u7f16\u53f7\u7684\u62bd\u5c49\uff0c\u91cc\u9762\u53ea\u6709\u4e00\u5f20\u7a7a\u767d\u5de5\u724c\u3002
+\u955c\u4e2d\u5f71 \u5de5\u724c\u4e0d\u662f\u7ed9\u6d3b\u4eba\u6234\u7684\u3002\u5b83\u53ea\u4f1a\u8ba4\u51fa\u8fd8\u6ca1\u79bb\u5f00\u516c\u53f8\u7684\u4eba\u3002
+\u6211 \u90a3\u4e3a\u4ec0\u4e48\u5b83\u5199\u7740\u6211\u7684\u540d\u5b57\uff1f
+\u65c1\u767d \u5de5\u724c\u80cc\u9762\u7684\u7ea2\u706f\u95ea\u4e86\u4e00\u4e0b\uff0c\u50cf\u6709\u4eba\u5728\u53e6\u4e00\u7aef\u786e\u8ba4\u4f60\u7684\u5230\u5c97\u65f6\u95f4\u3002
+end
+`,
+  "2-2": `
+bg show room fade 0.8
+\u65c1\u767d \u4f1a\u8bae\u5ba4\u7684\u6295\u5f71\u4eea\u81ea\u5df1\u4eae\u8d77\uff0c\u5899\u4e0a\u51fa\u73b0\u4e00\u4efd\u4e0d\u5b58\u5728\u7684\u4f1a\u8bae\u7eaa\u8981\u3002
+\u4fdd\u5b89\u8001\u79e6 \u770b\u5230\u81ea\u5df1\u7684\u540d\u5b57\u65f6\uff0c\u4e0d\u8981\u7b7e\u5b57\u3002
+\u65c1\u767d \u53ef\u7eaa\u8981\u6700\u540e\u4e00\u680f\u5df2\u7ecf\u6709\u4e86\u4f60\u7684\u7b7e\u540d\uff0c\u58a8\u8ff9\u8fd8\u6ca1\u5e72\u3002
+end
+`,
+  "2-3": `
+bg show corridor fade 0.8
+\u65c1\u767d \u7535\u5b50\u95e8\u7981\u8bb0\u5f55\u91cc\uff0c\u4f60\u5728\u4e00\u5206\u949f\u5185\u8fdb\u51fa\u4e86\u540c\u4e00\u95f4\u529e\u516c\u5ba4\u5341\u4e09\u6b21\u3002
+\u6211 \u6211\u6ca1\u6709\u6765\u8fc7\u8fd9\u91cc\u3002
+\u65c1\u767d \u8bb0\u5f55\u4e0a\u7684\u7167\u7247\u5374\u6bcf\u4e00\u5f20\u90fd\u6bd4\u4e0a\u4e00\u5f20\u66f4\u50cf\u4f60\u3002
+end
+`,
+  "2-4": `
+bg show building fade 0.8
+\u65c1\u767d \u6d4b\u8bd5\u7ae0\u8282\u7684\u6700\u540e\u4e00\u9875\u88ab\u7ea2\u7ebf\u7f1d\u4f4f\uff0c\u53ea\u9732\u51fa\u4e00\u884c\u5b57\uff1a\u4e0d\u8981\u628a\u4f60\u7684\u5de5\u724c\u501f\u7ed9\u4efb\u4f55\u4eba\u3002
+\u955c\u4e2d\u5f71 \u5305\u62ec\u6211\u3002
+\u65c1\u767d \u5979\u7b11\u4e86\u4e00\u4e0b\uff0c\u4f46\u955c\u9762\u91cc\u7684\u4f60\u6ca1\u6709\u7b11\u3002
+end
+`
+};
+
+const chapters = [
+  { id: "1-1", title: "\u7ea2\u7ebf\u9879\u76ee", desc: "\u7b2c\u4e00\u7ae0\u7b2c\u4e00\u56de\uff1a\u6df1\u591c\u56de\u5230\u4e5d\u53f7\u697c\uff0c\u9879\u76ee\u4ecd\u5728\u7b49\u4f60\u4e0a\u7ebf\u3002", x: 14, y: 58, thumb: "\u95e8" },
+  { id: "1-2", title: "\u53f8\u5e10\u5a18", desc: "\u7b2c\u4e00\u7ae0\u7b2c\u4e8c\u56de\uff1a\u8336\u6c34\u95f4\u91cc\u7684\u7b97\u76d8\u58f0\u5f00\u59cb\u8ba1\u7b97\u4f60\u7684\u503a\u3002", x: 30, y: 40, thumb: "\u8d26" },
+  { id: "1-3", title: "\u52a0\u73ed\u540c\u4e8b", desc: "\u7b2c\u4e00\u7ae0\u7b2c\u4e09\u56de\uff1a\u6572\u952e\u76d8\u7684\u4eba\u6b7b\u4e86\u4e09\u5e74\uff0c\u4ee3\u7801\u5374\u8fd8\u6ca1\u5199\u5b8c\u3002", x: 46, y: 56, thumb: "\u7801" },
+  { id: "1-4", title: "\u51b0\u7bb1\u95e8", desc: "\u7b2c\u4e00\u7ae0\u7b2c\u56db\u56de\uff1a\u8336\u6c34\u95f4\u7684\u51b0\u7bb1\u91cc\u50cf\u662f\u5173\u7740\u4e00\u4e2a\u4eba\u3002", x: 60, y: 38, thumb: "\u51b0" },
+  { id: "1-5", title: "\u8001\u8d75", desc: "\u7b2c\u4e00\u7ae0\u7b2c\u4e94\u56de\uff1a\u6b8b\u80a2\u4fdd\u5b89\u8bf4\uff0c\u4f60\u4e0d\u662f\u7b2c\u4e00\u6b21\u6765\u3002", x: 68, y: 58, thumb: "\u4fdd" },
+  { id: "1-6", title: "\u5e03\u5076\u6028\u7ae5", desc: "\u7b2c\u4e00\u7ae0\u7b2c\u516d\u56de\uff1a\u79ef\u6c34\u6df1\u5904\u7684\u5b69\u5b50\u8bb0\u5f97\u4f60\u7684\u6b7b\u56e0\u3002", x: 78, y: 42, thumb: "\u5076" },
+  { id: "1-7", title: "\u6b8b\u70db\u4e0e\u7eb8\u4f1e", desc: "\u7b2c\u4e00\u7ae0\u7b2c\u4e03\u56de\uff1a\u4e00\u70b9\u70db\u706b\u7167\u51fa\u6240\u6709\u8eb2\u5728\u89d2\u843d\u91cc\u7684\u773c\u775b\u3002", x: 84, y: 55, thumb: "\u70db" },
+  { id: "1-8", title: "\u955c\u79fb", desc: "\u7b2c\u4e00\u7ae0\u7b2c\u516b\u56de\uff1a\u5979\u7528\u4f60\u7684\u8138\u8bf4\uff0c\u53ea\u5dee\u6700\u540e\u4e00\u6b65\u3002", x: 90, y: 36, thumb: "\u955c" },
+  { id: "2-1", title: "\u7a7a\u767d\u5de5\u724c", desc: "\u7b2c\u4e8c\u7ae0\u7b2c\u4e00\u56de\uff1a\u6863\u6848\u5ba4\u51fa\u73b0\u6ca1\u6709\u7f16\u53f7\u7684\u62bd\u5c49\u3002", x: 26, y: 42, thumb: "\u724c" },
+  { id: "2-2", title: "\u4f1a\u8bae\u7eaa\u8981", desc: "\u7b2c\u4e8c\u7ae0\u7b2c\u4e8c\u56de\uff1a\u4e0d\u5b58\u5728\u7684\u4f1a\u8bae\u5df2\u7ecf\u66ff\u4f60\u7b7e\u5b57\u3002", x: 58, y: 55, thumb: "\u7b7e" },
+  { id: "2-3", title: "\u95e8\u7981\u8bb0\u5f55", desc: "\u7b2c\u4e8c\u7ae0\u7b2c\u4e09\u56de\uff1a\u76d1\u63a7\u8bb0\u5f55\u91cc\u51fa\u73b0\u4e86\u53e6\u4e00\u4e2a\u4f60\u3002", x: 64, y: 38, thumb: "\u7981" },
+  { id: "2-4", title: "\u501f\u51fa\u5de5\u724c", desc: "\u7b2c\u4e8c\u7ae0\u7b2c\u56db\u56de\uff1a\u6d4b\u8bd5\u7ae0\u8282\u6682\u65f6\u6536\u675f\u3002", x: 76, y: 56, thumb: "\u6863" }
+];
+
+const storyChapters = [
+  {
+    id: "chapter-1",
+    label: "\u7b2c\u4e00\u7ae0",
+    title: "\u7ea2\u7ebf\u9879\u76ee",
+    desc: "\u4e5d\u53f7\u697c\u7b2c\u4e00\u4efd\u5b8c\u6574\u5f02\u5e38\u6863\u6848\u3002",
+    bg: "./assets/story_ui/bg_story_01.jpg",
+    rounds: chapters.filter(round => round.id.startsWith("1-"))
+  },
+  {
+    id: "chapter-2",
+    label: "\u7b2c\u4e8c\u7ae0",
+    title: "\u7a7a\u767d\u5de5\u724c",
+    desc: "\u6d4b\u8bd5\u7ae0\u8282\uff1a\u6863\u6848\u5ba4\u51fa\u73b0\u4e86\u65b0\u7684\u6545\u4e8b\u7ebf\u3002",
+    bg: "./assets/main_ui/bg_main.jpg",
+    rounds: chapters.filter(round => round.id.startsWith("2-"))
+  },
+  {
+    id: "chapter-3",
+    label: "\u7b2c\u4e09\u7ae0",
+    title: "\u672a\u89e3\u9501",
+    desc: "\u540e\u7eed\u7ae0\u8282\u5c1a\u672a\u5f00\u653e\u3002",
+    bg: "./assets/story_ui/bg_story_01.jpg",
+    rounds: []
+  },
+  {
+    id: "chapter-4",
+    label: "\u7b2c\u56db\u7ae0",
+    title: "\u672a\u89e3\u9501",
+    desc: "\u540e\u7eed\u7ae0\u8282\u5c1a\u672a\u5f00\u653e\u3002",
+    bg: "./assets/story_ui/bg_story_01.jpg",
+    rounds: []
+  },
+  {
+    id: "chapter-5",
+    label: "\u7b2c\u4e94\u7ae0",
+    title: "\u672a\u89e3\u9501",
+    desc: "\u540e\u7eed\u7ae0\u8282\u5c1a\u672a\u5f00\u653e\u3002",
+    bg: "./assets/story_ui/bg_story_01.jpg",
+    rounds: []
+  },
+  {
+    id: "chapter-6",
+    label: "\u7b2c\u516d\u7ae0",
+    title: "\u672a\u89e3\u9501",
+    desc: "\u540e\u7eed\u7ae0\u8282\u5c1a\u672a\u5f00\u653e\u3002",
+    bg: "./assets/story_ui/bg_story_01.jpg",
+    rounds: []
+  }
+];
+
+const ghostCatalog = {
+  mirror: {
+    id: "mirror",
+    name: "司帐娘·赤幔",
+    rarity: "SSR",
+    likes: ["cracked_lipstick", "old_photo", "talisman_fire"],
+    hates: ["rust_key"],
+    quote: "红幔垂落，恩怨分明。"
+  },
+  elevator: {
+    id: "elevator",
+    name: "无面行者·寂言",
+    rarity: "SSR",
+    likes: ["soul_flag", "talisman_protect"],
+    hates: ["balance_charm"],
+    quote: "无面无言，只渡干净之魂。"
+  },
+  rain: {
+    id: "rain",
+    name: "九楼守童·阿隼",
+    rarity: "SR",
+    likes: ["occult_book", "paper_doll"],
+    hates: [],
+    quote: "拨浪鼓响，稚魂归楼。"
+  },
+  stair: {
+    id: "stair",
+    name: "多出来的台阶",
+    rarity: "SP",
+    likes: ["forbidden_incense"],
+    hates: ["balance_charm"],
+    quote: "它一直都在，只等你回头。"
+  }
+};
+
+const items = {
+  old_photo: { name: "旧照片", type: "normal", trust: 8, danger: 3, count: 3 },
+  cracked_lipstick: { name: "裂口唇膏", type: "bond", trust: 25, danger: 5, count: 2 },
+  forbidden_incense: { name: "禁香", type: "forbidden", trust: 45, danger: 15, count: 1 },
+  balance_charm: { name: "制衡符", type: "balance", trust: 2, danger: -20, count: 2 },
+  paper_doll: { name: "缠线纸偶", type: "bond", trust: 18, danger: 4, count: 6 },
+  rust_key: { name: "锈钥匙", type: "normal", trust: 14, danger: 2, count: 5 },
+  rain_tape: { name: "雨声磁带", type: "bond", trust: 22, danger: 3, count: 4 },
+  mirror_shard: { name: "裂镜片", type: "forbidden", trust: 30, danger: 9, count: 3 },
+  elevator_coin: { name: "电梯硬币", type: "normal", trust: 16, danger: 2, count: 5 },
+  red_thread: { name: "红线", type: "normal", trust: 12, danger: 1, count: 8 },
+  night_badge: { name: "夜班工牌", type: "bond", trust: 28, danger: 6, count: 3 },
+  sealed_note: { name: "封存便签", type: "balance", trust: 20, danger: -4, count: 4 },
+  occult_book: { name: "封纹记录书", type: "normal", trust: 10, danger: 1, count: 2, iconPath: "./assets/item_icons/icon_book.png" },
+  soul_flag: { name: "引魂幡碎片", type: "bond", trust: 18, danger: 2, count: 2, iconPath: "./assets/item_icons/icon_soul_flag.png" },
+  spirit_ember: { name: "幽灵火", type: "forbidden", trust: 24, danger: 6, count: 2, iconPath: "./assets/item_icons/icon_spirit.png" },
+  ritual_gold: { name: "祭仪金章", type: "normal", trust: 12, danger: 1, count: 2, iconPath: "./assets/item_icons/icon_gold.png" },
+  talisman_base: { name: "符纸基底", type: "balance", trust: 8, danger: -3, count: 2, iconPath: "./assets/item_icons/icon_talisman_base.png" },
+  talisman_fire: { name: "炎咒符", type: "forbidden", trust: 26, danger: 7, count: 2, iconPath: "./assets/item_icons/icon_talisman_fire.png" },
+  talisman_protect: { name: "护身符", type: "balance", trust: 16, danger: -8, count: 2, iconPath: "./assets/item_icons/icon_talisman_protect.png" },
+  shadow_contract: { name: "诡影之契", type: "ticket", count: 15 },
+  taboo_letter: { name: "禁忌之笺", type: "ticket", count: 10 }
+};
+
+const itemIconFallback = {
+  old_photo: "./assets/item_icons/icon_book.png",
+  cracked_lipstick: "./assets/item_icons/icon_talisman_fire.png",
+  forbidden_incense: "./assets/item_icons/icon_spirit.png",
+  balance_charm: "./assets/item_icons/icon_talisman_protect.png",
+  paper_doll: "./assets/item_icons/icon_talisman_base.png",
+  rust_key: "./assets/item_icons/icon_gold.png",
+  rain_tape: "./assets/item_icons/icon_soul_flag.png",
+  mirror_shard: "./assets/item_icons/icon_spirit.png",
+  elevator_coin: "./assets/item_icons/icon_gold.png",
+  red_thread: "./assets/item_icons/icon_talisman_fire.png",
+  night_badge: "./assets/item_icons/icon_book.png",
+  sealed_note: "./assets/item_icons/icon_talisman_base.png",
+  shadow_contract: "./assets/item_icons/icon_soul_flag.png",
+  taboo_letter: "./assets/item_icons/icon_talisman_fire.png"
+};
+
+function getItemIconPath(itemId) {
+  return items[itemId]?.iconPath || itemIconFallback[itemId] || "./assets/item_icons/icon_book.png";
+}
+
+const typeLabel = {
+  normal: "閫氱敤",
+  bond: "缇佺粖",
+  forbidden: "绂佸繉",
+  balance: "鍒惰　",
+  ticket: "鎶藉崱"
+};
+
+const pools = {
+  standard: { name: "甯搁┗璇″奖鍗℃睜", ticket: "shadow_contract", ssrPity: 90, spPity: null },
+  limited: { name: "闄愭椂绂佸繉UP鍗℃睜", ticket: "taboo_letter", ssrPity: 90, spPity: 180, up: "stair" }
+};
+
+const soulRoster = ["mirror", "rain", "elevator"];
+const soulDisplay = {
+  mirror: { name: "\u53f8\u5e10\u5a18\u00b7\u8d64\u5e54", rarity: "SSR", quote: "\u7ea2\u5e10\u4e4b\u4e0b\uff0c\u65ad\u6076\u7f18\uff0c\u62a4\u5b64\u9b42\u3002" },
+  rain: { name: "\u4e5d\u697c\u5b88\u7ae5\u00b7\u963f\u96bc", rarity: "SR", quote: "\u62e8\u6d6a\u9f13\u4e00\u54cd\uff0c\u8ff7\u8def\u7a1a\u9b42\u5f52\u697c\u3002" },
+  elevator: { name: "\u65e0\u9762\u884c\u8005\u00b7\u5bc2\u8a00", rarity: "SSR", quote: "\u65e0\u9762\u65e0\u8a00\uff0c\u53ea\u6e21\u5e72\u51c0\u4e4b\u9b42\u3002" }
+};
+const soulPortraits = {
+  mirror: "./assets/souls/%E5%8F%B8%E5%B8%90%E5%A8%98%C2%B7%E8%B5%A4%E5%B9%94.png",
+  rain: "./assets/souls/%E4%B9%9D%E6%A5%BC%E5%AE%88%E7%AB%A5.%E9%98%BF%E9%9A%BC.png",
+  elevator: "./assets/souls/%E6%97%A0%E9%9D%A2%E8%A1%8C%E8%80%85%C2%B7%E5%AF%82%E8%A8%80.png"
+};
+
+const soulGiftItems = [
+  "old_photo",
+  "cracked_lipstick",
+  "forbidden_incense",
+  "balance_charm",
+  "paper_doll",
+  "rust_key",
+  "rain_tape",
+  "mirror_shard",
+  "elevator_coin",
+  "red_thread",
+  "night_badge",
+  "sealed_note"
+];
+const giftDisplay = {
+  old_photo: { name: "\u65e7\u7167\u7247", icon: "\u7167", hint: "\u597d\u611f +8" },
+  cracked_lipstick: { name: "\u88c2\u53e3\u5507\u818f", icon: "\u5507", hint: "\u597d\u611f +25" },
+  forbidden_incense: { name: "\u7981\u9999", icon: "\u9999", hint: "\u597d\u611f +45" },
+  balance_charm: { name: "\u5236\u8861\u7b26", icon: "\u7b26", hint: "\u4fb5\u8680 -20" },
+  paper_doll: { name: "\u7f20\u7ebf\u7eb8\u5076", icon: "\u5076", hint: "\u597d\u611f +18" },
+  rust_key: { name: "\u9508\u94a5\u5319", icon: "\u94a5", hint: "\u597d\u611f +14" },
+  rain_tape: { name: "\u96e8\u58f0\u78c1\u5e26", icon: "\u58f0", hint: "\u597d\u611f +22" },
+  mirror_shard: { name: "\u88c2\u955c\u7247", icon: "\u955c", hint: "\u597d\u611f +30" },
+  elevator_coin: { name: "\u7535\u68af\u786c\u5e01", icon: "\u5e01", hint: "\u597d\u611f +16" },
+  red_thread: { name: "\u7ea2\u7ebf", icon: "\u7ebf", hint: "\u597d\u611f +12" },
+  night_badge: { name: "\u591c\u73ed\u5de5\u724c", icon: "\u724c", hint: "\u597d\u611f +28" },
+  sealed_note: { name: "\u5c01\u5b58\u4fbf\u7b7e", icon: "\u7b7e", hint: "\u597d\u611f +20" }
+};
+const rewardItemPool = Object.keys(items).filter(id => items[id].type !== "ticket");
+
+const affinityMaxLevel = 8;
+const affinityExpPerLevel = 10000;
+const affinityTitles = [
+  "\u521d\u8bc6",
+  "\u8bd5\u63a2",
+  "\u7559\u610f",
+  "\u56de\u5e94",
+  "\u4fe1\u4efb",
+  "\u5171\u9e23",
+  "\u7f81\u7eca",
+  "\u5171\u751f"
+];
+
+const soulLore = {
+  mirror: {
+    bondTitle: null,
+    bond: 72,
+    info: [
+      "\u6027\u522b\uff1a\u5973",
+      "\u6807\u7b7e\uff1a\u4ee3\u7801\u6b8b\u54cd / \u7acb\u9879\u5f02\u53d8 / \u5de5\u4f4d\u6e38\u9b42",
+      "\u4f18\u70b9\uff1a\u80fd\u611f\u77e5\u9690\u85cf\u6743\u9650\u4e0e\u5f02\u5e38\u811a\u672c\uff0c\u5bf9\u672a\u5b8c\u6210\u9879\u76ee\u4e0e\u6d4b\u8bd5\u73af\u5883\u53cd\u5e94\u654f\u9510\u3002",
+      "\u7f3a\u70b9\uff1a\u63a5\u8fd1\u9ad8\u9891\u62a5\u9519\u533a\u57df\u65f6\u4f1a\u5931\u63a7\uff0c\u5bb9\u6613\u88ab\u201c\u7ec8\u6b62\u8fdb\u7a0b\u201d\u6307\u4ee4\u5e72\u6270\u3002",
+      "\u6765\u6e90\uff1a11F\u672a\u5f52\u6863\u9879\u76ee\u7ec4\u3002\u521d\u6b21\u8bb0\u5f55\uff1a2024.10.11\u3002",
+      "\u8865\u5145\uff1a\u5979\u4f1a\u4e3b\u52a8\u8bb0\u4f4f\u9001\u793c\u7684\u4eba\uff0c\u4f46\u4e0d\u4f1a\u76f4\u63a5\u8868\u793a\u611f\u8c22\u3002\u5982\u679c\u8fde\u7eed\u5ffd\u89c6\u5979\uff0c\u955c\u9762\u91cc\u7684\u4eba\u5f71\u4f1a\u6bd4\u73b0\u5b9e\u5148\u4e00\u6b65\u505a\u51fa\u53cd\u5e94\u3002"
+    ],
+    bios: [
+      { title: "\u7b2c\u4e00\u6b21\u56de\u5934", brief: "\u5979\u5728\u6d4b\u8bd5\u673a\u7684\u9ed1\u5c4f\u91cc\u7b49\u5230\u4e86\u7b2c\u4e00\u4e2a\u770b\u89c1\u5979\u7684\u4eba\u3002", body: "\u90a3\u5929\u665a\u4e0a\uff0c11F\u7684\u663e\u793a\u5668\u5168\u90e8\u7184\u706d\u3002\u53ea\u6709\u4e00\u53f0\u6d4b\u8bd5\u673a\u4eae\u7740\u9ed1\u5c4f\uff0c\u5c4f\u91cc\u6709\u4e00\u4e2a\u6bd4\u73b0\u5b9e\u6162\u534a\u62cd\u7684\u5973\u5b69\u3002\u5979\u6ca1\u6709\u8bf4\u8bdd\uff0c\u53ea\u662f\u628a\u624b\u6307\u653e\u5728\u5634\u8fb9\uff0c\u50cf\u5728\u63d0\u9192\u4ed6\uff1a\u4e0d\u8981\u628a\u770b\u89c1\u7684\u4e8b\u8bb0\u5230\u5468\u62a5\u91cc\u3002" },
+      { title: "\u5df2\u5f52\u6863\u7684\u7a7a\u767d", brief: "\u5979\u7684\u540d\u5b57\u4ece\u6240\u6709\u6863\u6848\u91cc\u88ab\u5220\u6389\uff0c\u53ea\u7559\u4e0b\u4e00\u4e2a\u7a7a\u767d\u5de5\u53f7\u3002", body: "\u7a7a\u767d\u5de5\u53f7\u672c\u8be5\u4ee3\u8868\u79bb\u804c\uff0c\u4f46\u5979\u6bcf\u5929\u90fd\u4f1a\u5728\u955c\u9762\u4e2d\u51c6\u65f6\u5230\u5c97\u3002\u6709\u4eba\u8bd5\u56fe\u66ff\u5979\u8865\u4e0a\u59d3\u540d\uff0c\u7b2c\u4e8c\u5929\u90a3\u4e2a\u4eba\u7684\u5de5\u4f4d\u53ea\u5269\u4e0b\u4e00\u9762\u80cc\u5bf9\u5927\u5bb6\u7684\u5c0f\u955c\u5b50\u3002" },
+      { title: "\u955c\u9762\u4e4b\u5916", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" },
+      { title: "\u7ec8\u6b62\u8fdb\u7a0b", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" },
+      { title: "\u4e0d\u8981\u76f8\u4fe1\u81ea\u5df1", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" }
+    ]
+  },
+  rain: {
+    bondTitle: null,
+    bond: 48,
+    info: [
+      "\u6027\u522b\uff1a\u672a\u77e5",
+      "\u6807\u7b7e\uff1a\u591c\u96e8 / \u697c\u9053\u56de\u97f3 / \u95e8\u7f1d\u4fe1\u606f",
+      "\u4f18\u70b9\uff1a\u80fd\u591f\u5bdf\u89c9\u95e8\u540e\u7684\u6d3b\u52a8\u8f68\u8ff9\uff0c\u5bf9\u9501\u3001\u95e8\u724c\u548c\u6295\u8bc9\u5355\u6709\u5f02\u5e38\u654f\u611f\u3002",
+      "\u7f3a\u70b9\uff1a\u88ab\u65e0\u4eba\u56de\u5e94\u7684\u5bc6\u95ed\u7a7a\u95f4\u5438\u5f15\uff0c\u60c5\u7eea\u6ce2\u52a8\u65f6\u4f1a\u4e0d\u65ad\u91cd\u590d\u6572\u95e8\u3002",
+      "\u6765\u6e90\uff1a9F\u7a7a\u623f\u95f4\u6295\u8bc9\u6863\u6848\u3002\u521d\u6b21\u8bb0\u5f55\uff1a2024.10.18\u3002",
+      "\u8865\u5145\uff1a\u5b83\u559c\u6b22\u88ab\u8bb0\u5f55\u7684\u4e1c\u897f\u3002\u7ed9\u5b83\u65e7\u7167\u7247\u65f6\uff0c\u697c\u9053\u91cc\u7684\u96e8\u58f0\u4f1a\u77ed\u6682\u53d8\u5c0f\u3002"
+    ],
+    bios: [
+      { title: "\u7b2c\u4e00\u5c01\u6295\u8bc9", brief: "\u6bcf\u665a\u5341\u4e8c\u70b9\u540e\uff0c904\u95e8\u7f1d\u4e0b\u90fd\u4f1a\u88ab\u585e\u8fdb\u4e00\u5f20\u6295\u8bc9\u5355\u3002", body: "\u7b2c\u4e00\u5c01\u6295\u8bc9\u5355\u5199\u5f97\u5f88\u6e05\u695a\uff1a\u201c\u95e8\u5916\u6709\u4eba\u5b66\u6211\u6572\u95e8\u3002\u201d\u4f46\u76d1\u63a7\u91cc\u6ca1\u6709\u4eba\uff0c\u53ea\u6709\u4e00\u4e32\u6e7f\u811a\u5370\u5728\u95e8\u524d\u505c\u4e86\u4e09\u5206\u949f\u3002" },
+      { title: "\u4e0d\u80fd\u6253\u5f00\u7684\u95e8", brief: "\u5b83\u5e76\u4e0d\u60f3\u8fdb\u6765\uff0c\u5b83\u53ea\u60f3\u786e\u8ba4\u91cc\u9762\u8fd8\u6709\u4eba\u3002", body: "\u697c\u9053\u4e2d\u7684\u6572\u95e8\u58f0\u4ece\u4e0d\u4f1a\u8d85\u8fc7\u4e09\u4e0b\u3002\u7b2c\u56db\u4e0b\u54cd\u8d77\u65f6\uff0c\u95e8\u540e\u7684\u4eba\u5c31\u4f1a\u5728\u5c4b\u5185\u542c\u89c1\u81ea\u5df1\u7684\u58f0\u97f3\uff1a\u201c\u6211\u56de\u6765\u4e86\u3002\u201d" },
+      { title: "\u96e8\u591c\u540d\u5355", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" },
+      { title: "\u95e8\u7f1d\u4e0b\u7684\u773c", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" },
+      { title: "\u8bf7\u4e0d\u8981\u56de\u7b54", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" }
+    ]
+  },
+  elevator: {
+    bondTitle: null,
+    bond: 55,
+    info: [
+      "\u6027\u522b\uff1a\u4e0e\u89c2\u6d4b\u8005\u4e00\u81f4",
+      "\u6807\u7b7e\uff1a\u7535\u68af\u53cd\u5149 / \u5ef6\u8fdf\u52a8\u4f5c / \u697c\u5c42\u9519\u4f4d",
+      "\u4f18\u70b9\uff1a\u53ef\u9884\u8b66\u5c06\u8981\u62b5\u8fbe\u7684\u9519\u8bef\u697c\u5c42\uff0c\u80fd\u5728\u95ed\u95e8\u524d\u6355\u6349\u5230\u4e0d\u5e94\u51fa\u73b0\u7684\u4eba\u5f71\u3002",
+      "\u7f3a\u70b9\uff1a\u4f1a\u6a21\u4eff\u73a9\u5bb6\u7684\u8868\u60c5\u548c\u624b\u52bf\uff0c\u4e0e\u5176\u5bf9\u89c6\u8fc7\u4e45\u4f1a\u51fa\u73b0\u8bb0\u5fc6\u504f\u79fb\u3002",
+      "\u6765\u6e90\uff1a\u7535\u68af\u7ef4\u4fee\u8bb0\u5f55\u7b2c13\u6b21\u8865\u5f55\u3002\u521d\u6b21\u8bb0\u5f55\uff1a2024.11.02\u3002",
+      "\u8865\u5145\uff1a\u5b83\u4e0d\u559c\u6b22\u5236\u8861\u7b26\u3002\u5982\u679c\u88ab\u8feb\u7a33\u5b9a\uff0c\u5b83\u4f1a\u5728\u4e0b\u4e00\u6b21\u5f00\u95e8\u65f6\u628a\u73a9\u5bb6\u5e26\u5230\u4e00\u4e2a\u6ca1\u6709\u6309\u94ae\u7684\u697c\u5c42\u3002"
+    ],
+    bios: [
+      { title: "\u591a\u51fa\u7684\u6309\u94ae", brief: "\u67d0\u6b21\u7ef4\u4fee\u540e\uff0c\u7535\u68af\u9762\u677f\u4e0a\u591a\u4e86\u4e00\u4e2a\u6ca1\u6709\u6570\u5b57\u7684\u6309\u94ae\u3002", body: "\u7ef4\u4fee\u5458\u8bf4\u90a3\u4e2a\u6309\u94ae\u53ea\u5728\u955c\u9762\u91cc\u53ef\u89c1\u3002\u53ef\u7b2c\u4e8c\u5929\uff0c\u4ed6\u7684\u5de5\u724c\u51fa\u73b0\u5728\u7535\u68af\u4e95\u5e95\uff0c\u65f6\u95f4\u5361\u5728\u51cc\u6668\u4e24\u70b9\u5341\u4e09\u5206\u3002" },
+      { title: "\u4f60\u6bd4\u4f60\u5148\u5230", brief: "\u53cd\u5149\u91cc\u7684\u4eba\u603b\u662f\u5148\u4e00\u6b65\u8d70\u51fa\u7535\u68af\u3002", body: "\u6709\u4eba\u5728\u7535\u68af\u95e8\u6253\u5f00\u524d\u770b\u89c1\u81ea\u5df1\u5df2\u7ecf\u7ad9\u5728\u8d70\u5eca\u5c3d\u5934\u3002\u90a3\u4e2a\u201c\u81ea\u5df1\u201d\u56de\u5934\u770b\u4ed6\uff0c\u50cf\u662f\u5df2\u7ecf\u7b49\u5f97\u4e0d\u8010\u70e6\u3002" },
+      { title: "\u53ea\u4e0b\u884c", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" },
+      { title: "\u95ed\u95e8\u540e\u7684\u624b", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" },
+      { title: "\u4e0d\u5b58\u5728\u7684\u5230\u8fbe", brief: "\u597d\u611f\u8fbe\u5230\u66f4\u9ad8\u9636\u6bb5\u540e\u89e3\u9501\u3002", body: "\u5c1a\u672a\u89e3\u9501\u3002" }
+    ]
+  }
+};
+
+Object.assign(soulLore, {
+  mirror: {
+    bondTitle: null,
+    bond: 72,
+    info: [
+      "\u6027\u522b\uff1a\u5973",
+      "\u6807\u7b7e\uff1a\u51a5\u5a5a\u53f8\u638c\u8005 / \u7ea2\u5e10\u9634\u7075 / \u6d3b\u846c\u6028\u9b42",
+      "\u4f18\u70b9\uff1a\u6781\u5ea6\u62a4\u5f31\uff0c\u6267\u638c\u9634\u9633\u5a5a\u5951\uff0c\u7ea2\u7ebf\u53ef\u62a4\u9b42\u53ef\u6210\u5584\u7f18\u3002",
+      "\u7f3a\u70b9\uff1a\u88ab\u89e6\u53d1\u201c\u6d3b\u57cb/\u903c\u5a5a\u201d\u8bb0\u5fc6\u65f6\u5bb9\u6613\u5931\u63a7\uff0c\u7ea2\u5e10\u53d7\u635f\u4f1a\u660e\u663e\u526a\u5f31\u3002",
+      "\u5371\u9669\u7b49\u7ea7\uff1a\u8f83\u9ad8",
+      "\u6765\u6e90\uff1a\u6028\u6c14\u5316\u7075\uff0c\u53d7\u9634\u53f8\u6555\u5c01\u6267\u638c\u51a5\u5a5a\u53f8\u5e10\u3002"
+    ],
+    bios: [
+      { title: "\u7ea2\u68fa", brief: "\u5341\u4e03\u5c81\u88ab\u6d3b\u57cb\u914d\u9634\u5a5a\uff0c\u5728\u5730\u5e95\u7acb\u4e0b\u8840\u8a93\u3002", body: "\u5979\u66fe\u662f\u5b98\u5bb6\u4e4b\u5973\uff0c\u5374\u5728\u5192\u540d\u201c\u5b88\u793c\u201d\u4e2d\u88ab\u5c01\u5165\u7ea2\u68fa\u3002\u68fa\u677f\u9489\u843d\u4e0e\u9ec4\u571f\u6389\u843d\u4e4b\u58f0\uff0c\u6210\u4e3a\u5979\u6b64\u540e\u6240\u6709\u6740\u4f10\u7684\u8d77\u70b9\u3002" },
+      { title: "\u51a5\u5a5a", brief: "\u53f8\u5e10\u4e4b\u4e0b\u65ad\u7edd\u4ee5\u5192\u4e4b\u540d\u5bb3\u547d\u7684\u4ea4\u6613\u3002", body: "\u5979\u8d9f\u9634\u98ce\u5230\u8363\u574f\u4e4b\u5730\uff0c\u7834\u68fa\u6563\u7b26\uff0c\u5c06\u4f5c\u6076\u8005\u9b42\u9b44\u62d8\u5165\u9634\u57df\uff0c\u4ee5\u540c\u6837\u7684\u5bc2\u6697\u4e0e\u7a92\u606f\u507f\u8fd8\u539f\u7f6a\u3002" },
+      { title: "\u7ea2\u7ebf", brief: "\u4e0d\u6b62\u5ba1\u5224\uff0c\u4e5f\u6210\u5168\u771f\u60c5\u4e4b\u9b42\u3002", body: "\u5979\u4e3a\u4e00\u5bf9\u751f\u6b7b\u79bb\u6563\u7684\u592b\u5987\u7cfb\u4e0a\u7ea2\u7ebf\uff0c\u8ba9\u4e24\u9053\u6f02\u6cca\u4e4b\u9b42\u5728\u9634\u591c\u91cc\u91cd\u901d\uff0c\u4ece\u6b64\u660e\u767d\u201c\u606f\u201d\u4e0d\u7b49\u4e8e\u201c\u6050\u201d\u3002" },
+      { title: "\u94dc\u94c3", brief: "\u4e0e\u65e0\u9762\u884c\u8005\u7684\u65e0\u58f0\u5951\u7ea6\u3002", body: "\u9b3c\u7fa4\u6495\u88c2\u7ea2\u5e10\u4e4b\u591c\uff0c\u65e0\u9762\u884c\u8005\u6301\u5e61\u800c\u81f3\u3002\u5979\u5c06\u9547\u715e\u94dc\u94c3\u4ea4\u4ed8\u4e8e\u4ed6\uff0c\u7ea6\u5b9a\u4e00\u54cd\u5373\u81f3\u3002" },
+      { title: "\u7ea2\u5e54", brief: "\u5979\u7684\u68fa\u6901\uff0c\u4e5f\u662f\u5979\u7684\u94e0\u7532\u3002", body: "\u767e\u5e74\u95f4\uff0c\u5979\u5728\u9634\u9633\u8fb9\u754c\u5b88\u62a4\u88ab\u903c\u8feb\u8005\u4e0e\u5b64\u9b42\uff0c\u5e76\u4ee5\u5f2f\u94a9\u4e0e\u53f8\u5e10\u5b8c\u6210\u5bf9\u7f6a\u7684\u5ba1\u5224\u3002" }
+    ]
+  },
+  rain: {
+    bondTitle: null,
+    bond: 64,
+    info: [
+      "\u6027\u522b\uff1a\u7537\uff08\u5b69\u7ae5\u5f62\u6001\uff09",
+      "\u6807\u7b7e\uff1a\u50c0\u5121\u7ae5\u9b42 / \u6789\u6b7b\u5b69\u7ae5\u5e87\u62a4\u8005 / \u6028\u6c14\u805a\u5408\u4f53",
+      "\u4f18\u70b9\uff1a\u5bf9\u5b69\u7ae5\u7075\u9b42\u6781\u5ea6\u6e29\u67d4\uff0c\u5728\u4e5d\u697c\u9b3c\u697c\u8303\u56f4\u5185\u5bf9\u90aa\u672f\u4e0e\u6076\u9b42\u5177\u5907\u7edd\u5bf9\u538b\u5236\u529b\u3002",
+      "\u7f3a\u70b9\uff1a\u89e6\u53d1\u8650\u7ae5\u8bb0\u5fc6\u4f1a\u66b4\u8d70\uff1b\u6728\u5076\u8eaf\u4f53\u6015\u706b\u3001\u6015\u9547\u9b42\u7b26\u4e0e\u9ad8\u6e29\u6cd5\u5668\u3002",
+      "\u5371\u9669\u7b49\u7ea7\uff1a\u8f83\u9ad8",
+      "\u6765\u6e90\uff1a\u9634\u95f4\u4e5d\u5c42\u9b3c\u697c\u5b88\u697c\u7075\u3002"
+    ],
+    bios: [
+      { title: "\u69ab\u9489", brief: "\u4ece\u88ab\u5356\u6389\u7684\u5b69\u5b50\uff0c\u53d8\u6210\u88ab\u7ea2\u7ebf\u64cd\u63a7\u7684\u6d3b\u50c0\u5121\u3002", body: "\u4e03\u5c81\u90a3\u5e74\uff0c\u4ed6\u88ab\u672f\u58eb\u5310\u89e3\u5173\u8282\u3001\u7f1d\u6b7b\u53e3\u820c\uff0c\u9aa8\u8089\u4e0e\u6728\u69ab\u76f8\u63a5\uff0c\u4ece\u6b64\u53ea\u80fd\u6210\u4e3a\u4ed6\u4eba\u624b\u4e2d\u51f6\u5668\u3002" },
+      { title: "\u5a03\u5a03", brief: "\u6000\u4e2d\u7684\u5e03\u5076\uff0c\u662f\u7b2c\u4e00\u4e2a\u6ca1\u80fd\u6551\u4e0b\u7684\u5b69\u5b50\u3002", body: "\u4ed6\u5c06\u6797\u4e2d\u6bcf\u4e00\u7f15\u6b8b\u9b42\u90fd\u7f1d\u5165\u5c0f\u5076\uff0c\u4e00\u58f0\u58f0\u94dc\u94c3\u4e0d\u662f\u5a01\u5413\uff0c\u800c\u662f\u88ab\u4e22\u4e0b\u7684\u7ae5\u9b42\u5728\u627e\u56de\u5f52\u8def\u3002" },
+      { title: "\u65ad\u7ef3", brief: "\u4ed6\u626f\u65ad\u7ea2\u7ef3\uff0c\u53cd\u624b\u7ec8\u7ed3\u517b\u9b3c\u672f\u58eb\u3002", body: "\u767e\u9b3c\u5a74\u715e\u796d\u4eea\u4e4b\u591c\uff0c\u4ed6\u6447\u8d77\u62e8\u6d6a\u9f13\uff0c\u8ba9\u6240\u6709\u88ab\u5c01\u9b42\u5b69\u5b50\u51b2\u7834\u67b7\u9501\uff0c\u7ed3\u675f\u4e86\u5341\u5e74\u7684\u50c0\u5121\u547d\u8fd0\u3002" },
+      { title: "\u4e5d\u697c", brief: "\u65e0\u6cd5\u5165\u8f6e\u56de\uff0c\u88ab\u6555\u5c01\u4e3a\u4e5d\u697c\u5b88\u7ae5\u3002", body: "\u4ed6\u4e0e\u4e5d\u5341\u4e5d\u9053\u7a1a\u9b42\u7f20\u7ed5\u4e3a\u4e00\uff0c\u7ea2\u7ef3\u4ece\u201c\u63a7\u5236\u201d\u53d8\u6210\u201c\u5f15\u8def\u201d\uff0c\u62e8\u6d6a\u9f13\u4ece\u201c\u6740\u4eba\u201d\u53d8\u6210\u201c\u5f15\u9b42\u201d\u3002" },
+      { title: "\u5b88\u7ae5", brief: "\u4e09\u767e\u5e74\u95f4\uff0c\u4ed6\u53ea\u60e9\u7f5a\u4f24\u5bb3\u5b69\u7ae5\u7684\u4eba\u3002", body: "\u4ed6\u548c\u53f8\u5e10\u5a18\u3001\u65e0\u9762\u884c\u8005\u5728\u9634\u9633\u8fb9\u754c\u5f7c\u6b64\u7167\u5e94\uff0c\u7528\u5b88\u671b\u66ff\u4ee3\u4e86\u590d\u4ec7\uff0c\u4e5f\u7ed9\u4e86\u7a1a\u9b42\u4e00\u4e2a\u5bb6\u3002" }
+    ]
+  },
+  elevator: {
+    bondTitle: null,
+    bond: 68,
+    info: [
+      "\u6027\u522b\uff1a\u7537",
+      "\u6807\u7b7e\uff1a\u65e0\u9762\u9634\u5dee / \u51a5\u9014\u5f15\u9b42\u4eba / \u504f\u6267\u5b64\u51b7",
+      "\u4f18\u70b9\uff1a\u715e\u6c14\u5185\u655b\uff0c\u5ba1\u5224\u529b\u5f3a\uff1b\u5bf9\u6d01\u51c0\u9b42\u9b44\u4e0e\u5e7c\u9b42\u6781\u5ea6\u53ef\u9760\uff0c\u51fa\u624b\u679c\u51b3\u3002",
+      "\u7f3a\u70b9\uff1a\u65e0\u53e3\u4e0d\u80fd\u8a00\uff0c\u6c9f\u901a\u6210\u672c\u9ad8\uff1b\u88ab\u63ed\u5f00\u906e\u9762\u5e03\u65f6\u5bb9\u6613\u5931\u63a7\u3002",
+      "\u5371\u9669\u7b49\u7ea7\uff1a\u9ad8",
+      "\u6765\u6e90\uff1a\u9634\u53f8\u6555\u5c01\u65e0\u9762\u884c\u8005\uff0c\u884c\u8d70\u9634\u9633\u5939\u7f1d\u3002"
+    ],
+    bios: [
+      { title: "\u6d4a\u6cb3", brief: "\u6d4a\u6c34\u65ad\u5d16\u4e4b\u591c\uff0c\u4ed6\u4e3a\u8fd8\u4eba\u60c5\u503a\u800c\u4ea1\u3002", body: "\u4ed6\u672c\u662f\u6e58\u897f\u5c71\u4e2d\u5f15\u8def\u4eba\uff0c\u56e0\u6551\u4e00\u540d\u91c7\u836f\u5973\u5b50\u88ab\u6697\u6cb3\u5377\u8d70\uff0c\u9b42\u9b44\u5728\u9634\u9633\u5939\u7f1d\u91cd\u9192\uff0c\u88ab\u5c01\u4e3a\u65e0\u9762\u884c\u8005\u3002" },
+      { title: "\u7a1a\u9b42", brief: "\u4ed6\u5e76\u975e\u6162\u60b2\uff0c\u53ea\u504f\u7231\u6d01\u51c0\u4e4b\u9b42\u3002", body: "\u51a5\u9014\u53e4\u9053\u4e0a\uff0c\u4ed6\u4ee5\u5f15\u9b42\u5e61\u7b3c\u7f69\u5e7c\u9b42\uff0c\u8fde\u65a9\u997f\u9b3c\uff0c\u4e09\u65e5\u4e0d\u79bb\uff0c\u53ea\u4e3a\u8ba9\u7a7a\u6d01\u4e4b\u9b42\u4e0d\u88ab\u6c61\u79fd\u3002" },
+      { title: "\u7aa5\u9762", brief: "\u7a83\u89c6\u4ed6\u9762\u5bb9\u8005\uff0c\u5fc5\u76f4\u89c6\u81ea\u8eab\u6050\u60e7\u3002", body: "\u8499\u9762\u4e4b\u4e0b\u662f\u4e00\u9762\u9634\u955c\uff0c\u6620\u7167\u4ea1\u9b42\u6700\u4e0d\u6562\u770b\u89c1\u7684\u6b7b\u72b6\u3002\u72c2\u59c4\u50ad\u8d8a\u4e4b\u9b42\uff0c\u7ec8\u5c06\u88ab\u5f15\u9b42\u5e61\u6536\u62bc\u6c89\u6ca6\u3002" },
+      { title: "\u65e7\u4eba", brief: "\u767e\u5e74\u7b49\u5019\uff0c\u53ea\u4e3a\u7ed9\u53e4\u65e7\u4eba\u60c5\u4e00\u4e2a\u4ea4\u4ee3\u3002", body: "\u4ed6\u66fe\u7b49\u90a3\u540d\u91c7\u836f\u5973\u5b50\u7684\u9b42\u9b44\u8db3\u8db3\u767e\u5e74\uff0c\u4e0d\u4e3a\u60c5\u7231\uff0c\u53ea\u56e0\u201c\u8fd8\u503a\u201d\u4e8c\u5b57\u3002\u504f\u6267\u4e0e\u51b7\u6de1\uff0c\u5728\u4ed6\u8eab\u4e0a\u540c\u65f6\u5171\u5b58\u3002" },
+      { title: "\u504f\u79c1", brief: "\u4ed6\u4ece\u4e0d\u666e\u6e21\uff0c\u53ea\u5bf9\u503c\u5f97\u4e4b\u9b42\u7834\u4f8b\u3002", body: "\u4ed6\u66fe\u4ee5\u767e\u5e74\u529f\u5fb7\u6362\u4e00\u7f15\u6e05\u767d\u9b42\u9b44\u3002\u4ed6\u627f\u8ba4\u81ea\u5df1\u51b7\u6f20\u3001\u8bb0\u4ec7\u3001\u504f\u6267\uff0c\u4f46\u4e5f\u56e0\u6b64\u6210\u4e3a\u9634\u9633\u5939\u7f1d\u4e2d\u6700\u7a33\u7684\u63a5\u5f15\u8005\u3002" }
+    ]
+  }
+});
+
+const summonConfig = {
+  normal: { name: "\u666e\u901a\u53ec\u5524", currency: "gold", single: 100, ten: 900 },
+  mystery: { name: "\u9ad8\u7ea7\u53ec\u5524", currency: "spirit", single: 10, ten: 90 }
+};
+
+const rarityVisual = {
+  N: { label: "N", color: "#58c777", rare: false },
+  R: { label: "R", color: "#4ba6ff", rare: false },
+  SR: { label: "SR", color: "#a95cff", rare: false },
+  SSR: { label: "SSR", color: "#ffd45a", rare: true },
+  SP: { label: "SP", color: "#ff3b35", rare: true }
+};
+
+const summonRateTables = {
+  normal: [
+    { kind: "item", weight: 30.0 },   // 道具 + N 总计 87%
+    { kind: "card", rarity: "N", weight: 57.0 },
+    { kind: "card", rarity: "R", weight: 10.0 },
+    { kind: "card", rarity: "SR", weight: 3.0 }
+  ],
+  mystery: [
+    { kind: "card", rarity: "R", weight: 78.75 },
+    { kind: "card", rarity: "SR", weight: 20.0 },
+    { kind: "card", rarity: "SSR", weight: 1.0 },
+    { kind: "card", rarity: "SP", weight: 0.25 }
+  ]
+};
+
+function createCardLibrary() {
+  const pools = [
+    ["N", 8],
+    ["R", 17],
+    ["SR", 17],
+    ["SSR", 7],
+    ["SP", 6]
+  ];
+  const cards = [];
+  pools.forEach(([rarity, count]) => {
+    for (let i = 1; i <= count; i += 1) {
+      const serial = String(i).padStart(3, "0");
+      const code = `${rarity}${serial}`;
+      cards.push({
+        id: code,
+        rarity,
+        name: code,
+        image: `./assets/cards/${code}.png`
+      });
+    }
+  });
+  return cards;
+}
+
+const summonCards = createCardLibrary();
+
+const state = loadState();
+let currentTab = "Story";
+let activeStoryChapterId = null;
+let activeGhost = soulRoster.includes(state.unlockedGhosts[0]) ? state.unlockedGhosts[0] : soulRoster[0];
+let activeSoulTab = "feed";
+let activeSummonPool = "normal";
+let activeBagTab = "items";
+let activeBagItemId = null;
+let engine = null;
+const tapAudio = new Audio("./assets/audio/tap.mp3");
+tapAudio.preload = "auto";
+const bgmAudio = new Audio("./assets/audio/BGM01.mp3");
+bgmAudio.preload = "auto";
+bgmAudio.loop = true;
+bgmAudio.volume = 0.38;
+
+function playTapSound() {
+  try {
+    const sound = tapAudio.cloneNode();
+    sound.volume = 0.75;
+    sound.play().catch(() => {});
+  } catch {}
+}
+
+function playBgm() {
+  try {
+    if (bgmAudio.paused) bgmAudio.play().catch(() => {});
+  } catch {}
+}
+
+function defaultState() {
+  return {
+    seenOpening: false,
+    playerName: "",
+    unlockedChapters: ["1-1"],
+    completedChapters: [],
+    unlockedGhosts: [...soulRoster],
+    ghosts: {
+      mirror: { trust: 0, affinityLevel: 1, affinityExp: 0, danger: 0, stage: 1, daily: 0, lastReset: todayKey(), warn: 0 },
+      rain: { trust: 12, affinityLevel: 1, affinityExp: 1200, danger: 8, stage: 1, daily: 0, lastReset: todayKey(), warn: 0 },
+      elevator: { trust: 24, affinityLevel: 1, affinityExp: 2400, danger: 18, stage: 1, daily: 0, lastReset: todayKey(), warn: 0 }
+    },
+    bag: Object.fromEntries(Object.entries(items).map(([id, item]) => [id, item.count || 0])),
+    cards: {},
+    currency: { gold: 10000, spirit: 1000 },
+    pity: {
+      standard: { total: 0, sr: 0, ssr: 0, sp: 0 },
+      limited: { total: 0, sr: 0, ssr: 0, sp: 0 }
+    },
+    lastDraws: [],
+    storySave: null
+  };
+}
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return saved ? mergeDefaults(saved) : defaultState();
+  } catch {
+    return defaultState();
+  }
+}
+
+function mergeDefaults(saved) {
+  const base = defaultState();
+  const merged = {
+    ...base,
+    ...saved,
+    ghosts: { ...base.ghosts, ...saved.ghosts },
+    bag: { ...base.bag, ...saved.bag },
+    cards: { ...base.cards, ...saved.cards },
+    currency: { ...base.currency, ...saved.currency },
+    pity: { ...base.pity, ...saved.pity }
+  };
+  soulRoster.forEach(id => {
+    if (!merged.unlockedGhosts.includes(id)) merged.unlockedGhosts.push(id);
+    if (!merged.ghosts[id]) {
+      merged.ghosts[id] = { trust: 0, affinityLevel: 1, affinityExp: 0, danger: 0, stage: 1, daily: 0, lastReset: todayKey(), warn: 0 };
+    }
+    normalizeAffinity(merged.ghosts[id]);
+  });
+  normalizeStoryProgress(merged);
+  return merged;
+}
+
+function normalizeStoryProgress(targetState) {
+  const unlocked = new Set(["1-1"]);
+  const completed = new Set(targetState.completedChapters || []);
+  chapters.forEach((round, index) => {
+    if (!completed.has(round.id)) return;
+    unlocked.add(round.id);
+    const next = chapters[index + 1];
+    if (next) unlocked.add(next.id);
+  });
+  targetState.unlockedChapters = chapters
+    .map(round => round.id)
+    .filter(id => unlocked.has(id));
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  document.getElementById("saveState").textContent = "已保存";
+  updateStatusBar();
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function resetDailyIfNeeded(ghostId) {
+  const ghost = state.ghosts[ghostId];
+  if (ghost.lastReset !== todayKey()) {
+    ghost.daily = 0;
+    ghost.lastReset = todayKey();
+  }
+}
+
+function normalizeAffinity(ghost) {
+  if (!ghost) return { level: 1, exp: 0, progress: 0, title: affinityTitles[0] };
+  if (!Number.isFinite(ghost.affinityLevel)) ghost.affinityLevel = 1;
+  if (!Number.isFinite(ghost.affinityExp)) {
+    ghost.affinityExp = Math.max(0, Math.min(affinityExpPerLevel - 1, Math.round((ghost.trust || 0) * 100)));
+  }
+  ghost.affinityLevel = Math.max(1, Math.min(affinityMaxLevel, Math.floor(ghost.affinityLevel)));
+  ghost.affinityExp = Math.max(0, Math.floor(ghost.affinityExp));
+  while (ghost.affinityExp >= affinityExpPerLevel && ghost.affinityLevel < affinityMaxLevel) {
+    ghost.affinityExp -= affinityExpPerLevel;
+    ghost.affinityLevel += 1;
+  }
+  if (ghost.affinityLevel >= affinityMaxLevel) {
+    ghost.affinityLevel = affinityMaxLevel;
+    ghost.affinityExp = Math.min(ghost.affinityExp, affinityExpPerLevel);
+  }
+  return {
+    level: ghost.affinityLevel,
+    exp: ghost.affinityExp,
+    progress: Math.max(0, Math.min(100, (ghost.affinityExp / affinityExpPerLevel) * 100)),
+    title: affinityTitles[ghost.affinityLevel - 1] || affinityTitles[0]
+  };
+}
+
+function addAffinityExp(ghost, exp) {
+  const before = normalizeAffinity(ghost).level;
+  ghost.affinityExp += Math.max(0, Math.round(exp));
+  const after = normalizeAffinity(ghost).level;
+  return { before, after };
+}
+
+class StoryEngine {
+  constructor(script, onEnd, snapshot) {
+    this.raw = script;
+    this.lines = script.split("\n").map(line => line.trim()).filter(line => line && !line.startsWith("#"));
+    this.labels = {};
+    this.index = snapshot?.index || 0;
+    this.onEnd = onEnd;
+    this.waiting = false;
+    this.typing = false;
+    this.auto = false;
+    this.skip = false;
+    this.scene = snapshot?.scene || { bg: "building", chars: [] };
+    this.buildLabels();
+    this.applyScene();
+  }
+
+  buildLabels() {
+    this.lines.forEach((line, i) => {
+      const [cmd, name] = line.split(/\s+/);
+      if (cmd?.toLowerCase() === "label" && name) this.labels[name] = i;
+    });
+  }
+
+  log(message) {
+    const panel = document.getElementById("logPanel");
+    const list = document.getElementById("logList");
+    panel.classList.remove("hidden");
+    const row = document.createElement("div");
+    row.textContent = message;
+    list.prepend(row);
+  }
+
+  snapshot() {
+    return {
+      raw: this.raw,
+      index: this.index,
+      scene: this.scene
+    };
+  }
+
+  applyScene() {
+    setBackground(this.scene.bg || "building");
+    renderChars(this.scene.chars || []);
+  }
+
+  async next() {
+    if (this.waiting || this.typing) {
+      this.skipType = true;
+      return;
+    }
+    const line = this.lines[this.index++];
+    if (!line) {
+      this.finish();
+      return;
+    }
+    await this.execute(line);
+  }
+
+  async execute(line) {
+    const [cmdRaw, ...rest] = line.split(/\s+/);
+    const cmd = cmdRaw.toLowerCase();
+    try {
+      if (cmd === "bg") {
+        const bg = rest[1];
+        if (rest[0] === "show" && bg) {
+          this.scene.bg = bg;
+          setBackground(bg);
+        }
+        return this.next();
+      }
+      if (cmd === "char") {
+        const action = rest[0];
+        const name = rest[1];
+        const pos = rest[2] || "center";
+        if (action === "show") this.scene.chars = [{ name, pos }];
+        if (action === "hide") this.scene.chars = this.scene.chars.filter(char => char.name !== name);
+        renderChars(this.scene.chars);
+        return this.next();
+      }
+      if (cmd === "wait") {
+        this.waiting = true;
+        setTimeout(() => {
+          this.waiting = false;
+          this.next();
+        }, Number(rest[0] || 0.5) * 1000);
+        return;
+      }
+      if (cmd === "jump") {
+        this.index = this.labels[rest[0]] ?? this.index;
+        return this.next();
+      }
+      if (cmd === "label") return this.next();
+      if (cmd === "choice") return this.showChoices(rest.join(" "));
+      if (cmd === "end") return this.finish();
+      if (cmd === "bgm" || cmd === "video") return this.next();
+      await this.say(cmdRaw, rest.join(" "));
+    } catch (error) {
+      this.log(`绗?${this.index} 琛岄敊璇細${error.message}`);
+      this.next();
+    }
+  }
+
+  async say(name, text) {
+    const speaker = document.getElementById("speaker");
+    const line = document.getElementById("line");
+    document.getElementById("choices").innerHTML = "";
+    speaker.textContent = name;
+    line.textContent = "";
+    this.typing = true;
+    for (const char of text) {
+      if (this.skip || this.skipType) {
+        line.textContent = text;
+        break;
+      }
+      line.textContent += char;
+      await sleep(28);
+    }
+    this.skipType = false;
+    this.typing = false;
+    if (this.auto || this.skip) setTimeout(() => this.next(), this.skip ? 80 : 900);
+  }
+
+  showChoices(payload) {
+    const choices = document.getElementById("choices");
+    choices.innerHTML = "";
+    const parts = payload.match(/[^:]+:[^\s]+/g) || [];
+    parts.forEach(part => {
+      const [label, target] = part.split(":");
+      const btn = document.createElement("button");
+      btn.textContent = label;
+      btn.onclick = () => {
+        choices.innerHTML = "";
+        this.index = this.labels[target] ?? this.index;
+        this.next();
+      };
+      choices.appendChild(btn);
+    });
+  }
+
+  finish() {
+    this.onEnd?.();
+  }
+}
+
+let chapterOneData = null;
+
+const storyCharacterMap = {
+  "\u4e5d\u697c\u5b88\u7ae5": "\u4e5d\u697c\u5b88\u7ae5.\u963f\u96bc.png",
+  "\u53f8\u5e10\u5a18": "\u53f8\u5e10\u5a18\u00b7\u8d64\u5e54.png",
+  "\u5e03\u5076\u6028\u7ae5": "\u5e03\u5076\u6028\u7ae5.png",
+  "\u6b8b\u70db\u9b42": "\u6b8b\u70db\u9b42.png",
+  "\u767d\u8863\u7a1a\u7075": "\u767d\u8863\u7a1a\u7075.png",
+  "\u955c\u79fb": "\u955c\u79fb.png",
+  "\u9634\u6c34\u86c7": "\u9634\u6c34\u86c7.png",
+  "\u7eb8\u4f1e\u620f\u5076": "\u7eb8\u4f1e\u620f\u5076.png",
+  "\u51b0\u7bb1\u91cc\u7684\u5973\u4eba": "\u9634\u6f6d\u6076.png",
+  "\u52a0\u73ed\u540c\u4e8b\u00b7\u5c0f\u5434": "\u65e0\u9762\u884c\u8005\u00b7\u5bc2\u8a00.png",
+  "\u6b8b\u80a2\u4fdd\u5b89\u00b7\u8001\u8d75": "\u795e\u79d8\u4eba.png",
+  "\u8001\u8d75": "\u795e\u79d8\u4eba.png",
+  "\u5c0f\u5434": "\u65e0\u9762\u884c\u8005\u00b7\u5bc2\u8a00.png"
+};
+
+const storyPortraitMap = {
+  "\u4e5d\u697c\u5b88\u7ae5_\u7acb\u7ed8": "\u4e5d\u697c\u5b88\u7ae5.\u963f\u96bc.png",
+  "\u53f8\u5e10\u5a18_\u7acb\u7ed8": "\u53f8\u5e10\u5a18\u00b7\u8d64\u5e54.png",
+  "\u5e03\u5076\u6028\u7ae5_\u7acb\u7ed8": "\u5e03\u5076\u6028\u7ae5.png",
+  "\u6b8b\u70db\u9b42_\u7acb\u7ed8": "\u6b8b\u70db\u9b42.png",
+  "\u767d\u8863\u7a1a\u7075_\u7acb\u7ed8": "\u767d\u8863\u7a1a\u7075.png",
+  "\u955c\u79fb_\u7acb\u7ed8": "\u955c\u79fb.png",
+  "\u9634\u6c34\u86c7_\u7acb\u7ed8": "\u9634\u6c34\u86c7.png",
+  "\u7eb8\u4f1e\u620f\u5076_\u7acb\u7ed8": "\u7eb8\u4f1e\u620f\u5076.png",
+  "\u51b0\u7bb1\u5973_\u7acb\u7ed8": "\u9634\u6f6d\u6076.png",
+  "\u5c0f\u5434_\u7acb\u7ed8": "\u65e0\u9762\u884c\u8005\u00b7\u5bc2\u8a00.png",
+  "\u8001\u8d75_\u7acb\u7ed8": "\u795e\u79d8\u4eba.png"
+};
+
+function storyAssetUrl(kind, file) {
+  return `./assets/chapter1/${kind}/${encodeURIComponent(file)}`;
+}
+
+function resolveStoryCharacter(row) {
+  const speaker = row?.["\u8bf4\u8bdd\u4eba"] || "";
+  const portrait = row?.["\u7acb\u7ed8\u540d"] || "";
+  const file = storyPortraitMap[portrait] || storyCharacterMap[speaker];
+  if (!file || speaker === "\u65c1\u767d" || speaker === "\u73a9\u5bb6") return null;
+  return { name: speaker, pos: "right", src: storyAssetUrl("chars", file) };
+}
+
+async function loadChapterOneData() {
+  if (chapterOneData) return chapterOneData;
+  const response = await fetch("./assets/chapter1/chapter1.json?v=2");
+  chapterOneData = await response.json();
+  return chapterOneData;
+}
+
+class SpreadsheetStoryEngine {
+  constructor(round, onEnd, snapshot = null) {
+    this.round = round;
+    this.rows = round.rows || [];
+    this.index = snapshot?.index || 0;
+    this.onEnd = onEnd;
+    this.typing = false;
+    this.skipType = false;
+    this.branchChoice = snapshot?.branchChoice || "";
+    this.waitingForName = snapshot?.waitingForName ?? (round.id === "1-1" && !state.playerName);
+    this.nameAsked = snapshot?.nameAsked || false;
+  }
+
+  snapshot() {
+    return {
+      type: "spreadsheet",
+      roundId: this.round.id,
+      index: this.index,
+      branchChoice: this.branchChoice,
+      waitingForName: this.waitingForName,
+      nameAsked: this.nameAsked
+    };
+  }
+
+  async next() {
+    if (this.typing) {
+      this.skipType = true;
+      return;
+    }
+    if (this.waitingForName && !this.nameAsked && this.index >= 1) {
+      this.nameAsked = true;
+      await this.say("\u795e\u79d8\u4eba", "\u8fdb\u53bb\u4e4b\u524d\uff0c\u544a\u8bc9\u6211\u4f60\u7684\u540d\u5b57\u3002\u4e5d\u53f7\u697c\u53ea\u8bb0\u5f97\u5199\u5728\u6863\u6848\u4e0a\u7684\u4eba\u3002");
+      showPlayerNameModal(() => {
+        this.waitingForName = false;
+        this.next();
+      });
+      return;
+    }
+    const row = this.nextPlayableRow();
+    if (!row) return this.finish();
+    this.applyRowScene(row);
+    await this.say(this.displaySpeaker(row), this.displayText(row));
+    if (row["\u9009\u62e9A"] || row["\u9009\u62e9B"]) {
+      this.showChoices(row);
+    }
+  }
+
+  nextPlayableRow() {
+    while (this.index < this.rows.length) {
+      const row = this.rows[this.index++];
+      const branch = row["\u5206\u652f"] || "";
+      if (!branch) {
+        this.branchChoice = "";
+        return row;
+      }
+      if (this.branchChoice && branch === this.branchChoice) return row;
+    }
+    return null;
+  }
+
+  applyRowScene(row) {
+    const bgName = (row["\u80cc\u666f\u56fe"] || "").trim();
+    if (bgName) {
+      const filename = /\.\w+$/i.test(bgName) ? bgName : `${bgName}.jpg`;
+      setBackground(storyAssetUrl("bg", filename));
+    }
+    const character = resolveStoryCharacter(row);
+    renderChars(character ? [character] : []);
+  }
+
+  displaySpeaker(row) {
+    const speaker = row["\u8bf4\u8bdd\u4eba"] || "\u65c1\u767d";
+    if (speaker === "\u73a9\u5bb6") return playerDisplayName();
+    return speaker;
+  }
+
+  displayText(row) {
+    const text = row["\u5bf9\u767d\u5185\u5bb9"] || "";
+    return text.replace(/\bPlayer\b/g, playerDisplayName());
+  }
+
+  async say(name, text) {
+    const speaker = document.getElementById("speaker");
+    const line = document.getElementById("line");
+    document.getElementById("choices").innerHTML = "";
+    speaker.textContent = name;
+    line.textContent = "";
+    this.typing = true;
+    for (const char of text) {
+      if (this.skipType) {
+        line.textContent = text;
+        break;
+      }
+      line.textContent += char;
+      await sleep(22);
+    }
+    this.skipType = false;
+    this.typing = false;
+  }
+
+  showChoices(row) {
+    const choices = document.getElementById("choices");
+    choices.innerHTML = "";
+    [["A", row["\u9009\u62e9A"]], ["B", row["\u9009\u62e9B"]]].forEach(([branch, label]) => {
+      if (!label) return;
+      const btn = document.createElement("button");
+      btn.textContent = label;
+      btn.addEventListener("click", event => {
+        event.stopPropagation();
+        this.branchChoice = branch;
+        choices.innerHTML = "";
+        this.next();
+      });
+      choices.appendChild(btn);
+    });
+  }
+
+  finish() {
+    renderChars([]);
+    this.onEnd?.();
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function playerDisplayName() {
+  return state.playerName || "\u73a9\u5bb6";
+}
+
+function updatePlayerNameDisplays(root = document) {
+  root.querySelectorAll(".hub-player-copy strong, .story-hud-player strong").forEach(el => {
+    el.textContent = playerDisplayName();
+  });
+}
+
+function setBackground(name) {
+  const bg = document.getElementById("bgLayer");
+  bg.className = "bg-layer";
+  if (name && (name.startsWith("./") || name.startsWith("/") || name.includes(".jpg") || name.includes(".png"))) {
+    bg.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.46)), url("${name}")`;
+  } else {
+    bg.style.backgroundImage = "";
+    bg.classList.add(`bg-${name || "building"}`);
+  }
+}
+
+function renderChars(chars) {
+  const layer = document.getElementById("charLayer");
+  layer.innerHTML = "";
+  chars.forEach(char => {
+    const el = document.createElement("div");
+    el.className = `ghost-portrait ${char.pos || "center"} ${char.src ? "real-portrait" : ""}`;
+    el.title = char.name;
+    if (char.src) {
+      const img = document.createElement("img");
+      img.src = char.src;
+      img.alt = char.name || "";
+      el.appendChild(img);
+    }
+    layer.appendChild(el);
+  });
+}
+
+function showPlayerNameModal(done) {
+  const layer = document.getElementById("modalLayer");
+  if (!layer) return;
+  layer.className = "modal-layer name-entry-layer";
+  layer.innerHTML = `
+    <article class="name-entry-modal">
+      <img class="name-entry-bg" src="./assets/chapter1/name/input_bg.jpg" alt="">
+      <h2>\u8bf7\u8f93\u5165\u4f60\u7684\u540d\u5b57</h2>
+      <label>\u59d3<input data-name-family maxlength="4" autocomplete="off"></label>
+      <label>\u540d<input data-name-given maxlength="6" autocomplete="off"></label>
+      <button class="name-random" type="button"><img src="./assets/chapter1/name/btn_02.png" alt=""><span>\u968f\u673a</span></button>
+      <button class="name-confirm" type="button"><img src="./assets/chapter1/name/btn_01.png" alt=""><span>\u786e\u5b9a</span></button>
+    </article>
+  `;
+  const family = layer.querySelector("[data-name-family]");
+  const given = layer.querySelector("[data-name-given]");
+  const names = [["\u6b27\u9633", "\u5f80\u524d"], ["\u6797", "\u6df1"], ["\u8bb8", "\u5f52"], ["\u9648", "\u9ed8"]];
+  const applyName = ([a, b]) => {
+    family.value = a;
+    given.value = b;
+  };
+  applyName(names[0]);
+  layer.querySelector(".name-random")?.addEventListener("click", () => applyName(names[Math.floor(Math.random() * names.length)]));
+  layer.querySelector(".name-confirm")?.addEventListener("click", () => {
+    const value = `${family.value || ""}${given.value || ""}`.trim() || "\u6b27\u9633\u5f80\u524d";
+    state.playerName = value;
+    saveState();
+    updatePlayerNameDisplays();
+    closeModal();
+    done?.();
+  });
+  family.focus();
+}
+
+async function startStory(scriptId, onEnd, snapshot = null) {
+  document.getElementById("titleScreen").classList.add("hidden");
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("nav").classList.add("hidden");
+  document.getElementById("scene").classList.remove("hidden");
+  document.getElementById("dialogue").classList.remove("hidden");
+  if (/^1-\d+$/.test(scriptId)) {
+    try {
+      const data = await loadChapterOneData();
+      const round = data.rounds.find(item => item.id === scriptId);
+      if (round) {
+        engine = new SpreadsheetStoryEngine(round, () => {
+          const reward = completeChapter(scriptId);
+          saveState();
+          presentCompletionRewards(reward, () => {
+            showStoryHome();
+            onEnd?.();
+          });
+        }, snapshot);
+        engine.next();
+        return;
+      }
+    } catch (error) {
+      notify("\u771f\u5b9e\u5267\u672c\u8f7d\u5165\u5931\u8d25\uff0c\u5c06\u4f7f\u7528\u5185\u7f6e\u5267\u672c", "warn");
+    }
+  }
+  engine = new StoryEngine(storyScripts[scriptId], () => {
+    if (scriptId === "opening") {
+      state.seenOpening = true;
+      unlockChapter("1-1");
+      saveState();
+      showHome();
+      onEnd?.();
+    } else {
+      const reward = completeChapter(scriptId);
+      saveState();
+      presentCompletionRewards(reward, () => {
+        showStoryHome();
+        onEnd?.();
+      });
+    }
+  });
+  engine.next();
+}
+
+function showHome() {
+  playBgm();
+  engine = null;
+  document.getElementById("titleScreen").classList.add("hidden");
+  document.getElementById("scene").classList.add("hidden");
+  document.getElementById("home").classList.remove("hidden");
+  showMainHub();
+  renderAll();
+  updatePlayerNameDisplays();
+}
+
+function showStoryHome() {
+  playBgm();
+  engine = null;
+  document.getElementById("titleScreen").classList.add("hidden");
+  document.getElementById("scene").classList.add("hidden");
+  document.getElementById("home").classList.remove("hidden");
+  openModule("Story");
+}
+
+function showMainHub() {
+  currentTab = "Hub";
+  document.getElementById("home").classList.remove("story-shell");
+  document.getElementById("home").classList.remove("raise-shell");
+  document.getElementById("home").classList.remove("summon-shell");
+  document.getElementById("home").classList.remove("bag-shell");
+  document.getElementById("mainHub").classList.remove("hidden");
+  document.querySelector(".top-status").classList.add("hidden");
+  document.querySelector(".content-area").classList.add("hidden");
+  document.getElementById("nav").classList.add("hidden");
+  document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.add("hidden"));
+  updateUiDebugTargets();
+}
+
+function openModule(tabName) {
+  if (!["Story", "Raise", "Gacha", "Bag"].includes(tabName)) {
+    showMainHub();
+    return;
+  }
+  currentTab = tabName;
+  const isStory = tabName === "Story";
+  const isRaise = tabName === "Raise";
+  const isSummon = tabName === "Gacha";
+  const isBag = tabName === "Bag";
+  if (isRaise) activeSoulTab = "feed";
+  if (isBag) {
+    activeBagTab = "cards";
+    activeBagItemId = null;
+  }
+  const isArtScreen = isStory || isRaise || isSummon || isBag;
+  document.getElementById("home").classList.toggle("story-shell", isStory);
+  document.getElementById("home").classList.toggle("raise-shell", isRaise);
+  document.getElementById("home").classList.toggle("summon-shell", isSummon);
+  document.getElementById("home").classList.toggle("bag-shell", isBag);
+  document.getElementById("mainHub").classList.add("hidden");
+  document.querySelector(".top-status").classList.toggle("hidden", isArtScreen);
+  document.querySelector(".content-area").classList.remove("hidden");
+  document.getElementById("nav").classList.toggle("hidden", isArtScreen);
+  document.querySelectorAll("#nav button").forEach(item => item.classList.toggle("active", item.dataset.tab === tabName));
+  document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.add("hidden"));
+  const panel = document.getElementById(`tab${tabName}`);
+  if (!panel) {
+    showMainHub();
+    return;
+  }
+  panel.classList.remove("hidden");
+  panel.classList.remove("panel-enter");
+  requestAnimationFrame(() => panel.classList.add("panel-enter"));
+  renderAll();
+}
+
+function showTitleScreen() {
+  engine = null;
+  document.getElementById("titleScreen").classList.remove("hidden");
+  document.getElementById("scene").classList.add("hidden");
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("nav").classList.add("hidden");
+  const hint = document.getElementById("enterHint");
+  hint.textContent = state.seenOpening ? "检测到本地存档：将进入主界面" : "新档案：将强制播放开篇剧情";
+}
+
+function enterGame() {
+  playBgm();
+  if (state.seenOpening) showHome();
+  else startStory("opening");
+}
+
+function firstUnlockedStoryChapter() {
+  return storyChapters.find(chapter => chapter.rounds.some(round => state.unlockedChapters.includes(round.id))) || storyChapters[0];
+}
+
+function isStoryChapterUnlocked(chapter) {
+  return chapter.rounds.some(round => state.unlockedChapters.includes(round.id));
+}
+
+function isStoryChapterDone(chapter) {
+  return chapter.rounds.every(round => state.completedChapters.includes(round.id));
+}
+
+function firstPlayableRound(chapter) {
+  return chapter.rounds.find(round => state.unlockedChapters.includes(round.id) && !state.completedChapters.includes(round.id)) || chapter.rounds.find(round => state.unlockedChapters.includes(round.id)) || chapter.rounds[0];
+}
+
+function pickRandomItems(count = 10) {
+  const drops = {};
+  for (let i = 0; i < count; i += 1) {
+    const id = rewardItemPool[Math.floor(Math.random() * rewardItemPool.length)];
+    drops[id] = (drops[id] || 0) + 1;
+    state.bag[id] = (state.bag[id] || 0) + 1;
+  }
+  return drops;
+}
+
+function mergeLoot(base, extra) {
+  const merged = { ...base };
+  Object.entries(extra || {}).forEach(([id, count]) => {
+    merged[id] = (merged[id] || 0) + count;
+  });
+  return merged;
+}
+
+function presentCompletionRewards(reward, done) {
+  if (!reward) {
+    done?.();
+    return;
+  }
+  const layer = document.getElementById("modalLayer");
+  if (!layer) {
+    done?.();
+    return;
+  }
+  const rows = Object.entries(reward.items || {});
+  layer.className = "modal-layer";
+  layer.innerHTML = `
+    <article class="game-modal reward-modal">
+      <h2>获得奖励</h2>
+      <p class="reward-money">金币 +${reward.gold || 0}${reward.spirit ? `　灵 +${reward.spirit}` : ""}</p>
+      <div class="reward-list">
+        ${rows.map(([id, count]) => `
+          <div class="reward-row">
+            <div class="reward-item-meta">
+              <img src="${getItemIconPath(id)}" alt="${items[id]?.name || id}">
+              <span>${items[id]?.name || id}</span>
+            </div>
+            <strong>x${count}</strong>
+          </div>
+        `).join("")}
+      </div>
+      <button class="primary" data-close-reward="1">确定</button>
+    </article>
+  `;
+  layer.querySelector("[data-close-reward]")?.addEventListener("click", () => {
+    closeModal();
+    done?.();
+  });
+}
+
+function completeChapter(id) {
+  if (!state.completedChapters.includes(id)) state.completedChapters.push(id);
+  const next = chapters[chapters.findIndex(ch => ch.id === id) + 1];
+  if (next) unlockChapter(next.id);
+  const reward = {
+    gold: 2000,
+    spirit: 0,
+    items: pickRandomItems(10)
+  };
+  state.currency.gold = (state.currency.gold || 0) + reward.gold;
+  const current = chapters.find(ch => ch.id === id);
+  const isChapterEnd = current && (!next || next.id.split("-")[0] !== current.id.split("-")[0]);
+  if (isChapterEnd) {
+    reward.spirit = 200;
+    state.currency.spirit = (state.currency.spirit || 0) + 200;
+    reward.items = mergeLoot(reward.items, pickRandomItems(10));
+  }
+  return reward;
+}
+
+function unlockChapter(id) {
+  if (!state.unlockedChapters.includes(id)) state.unlockedChapters.push(id);
+}
+
+function unlockGhost(id) {
+  if (!state.unlockedGhosts.includes(id)) state.unlockedGhosts.push(id);
+  if (!state.ghosts[id]) state.ghosts[id] = { trust: 0, affinityLevel: 1, affinityExp: 0, danger: 0, stage: 1, daily: 0, lastReset: todayKey(), warn: 0 };
+  normalizeAffinity(state.ghosts[id]);
+}
+
+function switchSoul(direction) {
+  const roster = soulRoster.filter(id => state.unlockedGhosts.includes(id));
+  if (!roster.length) return;
+  const currentIndex = Math.max(0, roster.indexOf(activeGhost));
+  const nextIndex = (currentIndex + direction + roster.length) % roster.length;
+  activeGhost = roster[nextIndex];
+  activeSoulTab = "feed";
+  renderRaiseTab();
+  updateStatusBar();
+  updateUiDebugTargets();
+}
+
+function renderAll() {
+  renderStoryTab();
+  renderRaiseTab();
+  renderGachaTab();
+  renderBagTab();
+  updateFx();
+  updateStatusBar();
+  updateCurrencyDisplays();
+  updatePlayerNameDisplays();
+  updateUiDebugTargets();
+}
+
+function loadUiDebugLayout() {
+  try {
+    uiDebugLayout = JSON.parse(localStorage.getItem(UI_LAYOUT_KEY) || "{}") || {};
+  } catch {
+    uiDebugLayout = {};
+  }
+}
+
+function saveUiDebugLayout() {
+  localStorage.setItem(UI_LAYOUT_KEY, JSON.stringify(uiDebugLayout));
+}
+
+function stageBounds() {
+  return document.getElementById("stage")?.getBoundingClientRect();
+}
+
+function applyUiDebugPosition(element, position) {
+  if (!element || !position) return;
+  const computed = getComputedStyle(element);
+  if (computed.position === "static") element.style.position = "relative";
+  element.style.left = `${position.left}%`;
+  element.style.top = `${position.top}%`;
+  element.style.right = "auto";
+  element.style.bottom = "auto";
+}
+
+function ensureUiDebugPanel() {
+  let panel = document.getElementById("uiDebugPanel");
+  if (panel) return panel;
+  panel = document.createElement("div");
+  panel.id = "uiDebugPanel";
+  panel.className = "ui-debug-panel hidden";
+  panel.innerHTML = `
+    <strong>UI\u8c03\u8bd5</strong>
+    <span>Alt + A \u5f00\u5173\uff0c\u62d6\u52a8\u5143\u7d20\u81ea\u52a8\u4fdd\u5b58</span>
+    <button type="button" data-ui-save>\u4fdd\u5b58\u4f4d\u7f6e</button>
+    <button type="button" data-ui-reset>閲嶇疆浣嶇疆</button>
+  `;
+  document.body.appendChild(panel);
+  panel.querySelector("[data-ui-save]")?.addEventListener("click", () => {
+    saveUiDebugLayout();
+    notify("UI \u4f4d\u7f6e\u5df2\u4fdd\u5b58", "info");
+  });
+  panel.querySelector("[data-ui-reset]")?.addEventListener("click", () => {
+    uiDebugLayout = {};
+    localStorage.removeItem(UI_LAYOUT_KEY);
+    updateUiDebugTargets();
+    notify("\u5df2\u91cd\u7f6e UI \u8c03\u8bd5\u4f4d\u7f6e", "info");
+  });
+  return panel;
+}
+
+function setUiDebugEnabled(enabled) {
+  uiDebugEnabled = enabled;
+  localStorage.setItem(UI_DEBUG_ENABLED_KEY, enabled ? "1" : "0");
+  document.body.classList.toggle("ui-debug-mode", enabled);
+  ensureUiDebugPanel().classList.toggle("hidden", !enabled);
+  updateUiDebugTargets();
+  notify(enabled ? "UI\u8c03\u8bd5\u6a21\u5f0f\u5df2\u5f00\u542f" : "UI\u8c03\u8bd5\u6a21\u5f0f\u5df2\u5173\u95ed", "info");
+}
+
+function updateUiDebugTargets() {
+  document.querySelectorAll("[data-ui-debug-id]").forEach(element => {
+    element.classList.remove("ui-debug-target");
+    element.classList.remove("ui-debug-selected");
+    element.removeAttribute("data-ui-debug-id");
+    element.removeAttribute("data-ui-debug-label");
+  });
+  uiDebugTargets.forEach(target => {
+    document.querySelectorAll(target.selector).forEach((element, index) => {
+      const id = index ? `${target.id}.${index + 1}` : target.id;
+      element.dataset.uiDebugId = id;
+      element.dataset.uiDebugLabel = target.label;
+      if (uiDebugLayout[id]) applyUiDebugPosition(element, uiDebugLayout[id]);
+      element.classList.toggle("ui-debug-target", uiDebugEnabled);
+      element.classList.toggle("ui-debug-selected", uiDebugEnabled && uiDebugSelectedId === id);
+    });
+  });
+}
+
+function selectUiDebugTarget(element) {
+  if (!element) return;
+  uiDebugSelectedId = element.dataset.uiDebugId;
+  document.querySelectorAll(".ui-debug-selected").forEach(item => item.classList.remove("ui-debug-selected"));
+  element.classList.add("ui-debug-selected");
+}
+
+function moveSelectedUiDebugTarget(key, fast) {
+  if (!uiDebugEnabled || !uiDebugSelectedId) return false;
+  const element = document.querySelector(`[data-ui-debug-id="${CSS.escape(uiDebugSelectedId)}"]`);
+  if (!element) return false;
+  const rect = stageBounds();
+  if (!rect) return false;
+  const elementRect = element.getBoundingClientRect();
+  const current = uiDebugLayout[uiDebugSelectedId] || {
+    left: ((elementRect.left - rect.left) / rect.width) * 100,
+    top: ((elementRect.top - rect.top) / rect.height) * 100
+  };
+  const step = fast ? 1 : 0.1;
+  const next = {
+    left: Number(current.left),
+    top: Number(current.top)
+  };
+  if (key === "ArrowLeft") next.left -= step;
+  if (key === "ArrowRight") next.left += step;
+  if (key === "ArrowUp") next.top -= step;
+  if (key === "ArrowDown") next.top += step;
+  next.left = Math.max(-20, Math.min(120, Number(next.left.toFixed(3))));
+  next.top = Math.max(-20, Math.min(120, Number(next.top.toFixed(3))));
+  uiDebugLayout[uiDebugSelectedId] = next;
+  applyUiDebugPosition(element, next);
+  saveUiDebugLayout();
+  return true;
+}
+
+function initializeUiDebug() {
+  loadUiDebugLayout();
+  uiDebugEnabled = localStorage.getItem(UI_DEBUG_ENABLED_KEY) === "1";
+  document.body.classList.toggle("ui-debug-mode", uiDebugEnabled);
+  ensureUiDebugPanel().classList.toggle("hidden", !uiDebugEnabled);
+
+  let dragState = null;
+  document.addEventListener("pointerdown", event => {
+    if (!uiDebugEnabled) return;
+    if (event.target.closest(".ui-debug-panel")) return;
+    const element = event.target.closest("[data-ui-debug-id]");
+    if (!element) return;
+    const rect = stageBounds();
+    if (!rect) return;
+    const elementRect = element.getBoundingClientRect();
+    dragState = {
+      element,
+      id: element.dataset.uiDebugId,
+      pointerId: event.pointerId,
+      offsetX: event.clientX - elementRect.left,
+      offsetY: event.clientY - elementRect.top
+    };
+    selectUiDebugTarget(element);
+    element.classList.add("ui-debug-dragging");
+    element.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+
+  document.addEventListener("pointermove", event => {
+    if (!dragState || event.pointerId !== dragState.pointerId) return;
+    const rect = stageBounds();
+    if (!rect) return;
+    const left = ((event.clientX - rect.left - dragState.offsetX) / rect.width) * 100;
+    const top = ((event.clientY - rect.top - dragState.offsetY) / rect.height) * 100;
+    const position = {
+      left: Math.max(-20, Math.min(120, Number(left.toFixed(3)))),
+      top: Math.max(-20, Math.min(120, Number(top.toFixed(3))))
+    };
+    uiDebugLayout[dragState.id] = position;
+    applyUiDebugPosition(dragState.element, position);
+    event.preventDefault();
+  }, true);
+
+  document.addEventListener("pointerup", event => {
+    if (!dragState || event.pointerId !== dragState.pointerId) return;
+    dragState.element.classList.remove("ui-debug-dragging");
+    dragState.element.releasePointerCapture?.(event.pointerId);
+    saveUiDebugLayout();
+    dragState = null;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+
+  document.addEventListener("pointercancel", () => {
+    if (!dragState) return;
+    dragState.element.classList.remove("ui-debug-dragging");
+    saveUiDebugLayout();
+    dragState = null;
+  }, true);
+}
+
+function updateStatusBar() {
+  const mode = document.getElementById("statusMode");
+  const title = document.getElementById("statusTitle");
+  const meta = document.getElementById("statusMeta");
+  const contract = document.getElementById("contractCount");
+  const letter = document.getElementById("letterCount");
+  if (!mode || !title || !meta) return;
+  contract.textContent = state.bag.shadow_contract || 0;
+  letter.textContent = state.bag.taboo_letter || 0;
+  const completed = state.completedChapters.length;
+  if (currentTab === "Story") {
+    mode.textContent = "鍓ф儏杩涘害";
+    title.textContent = state.unlockedChapters.at(-1) || "1-1";
+    meta.textContent = state.unlockedChapters.at(-1) || "1-1";
+  }
+  if (currentTab === "Raise") {
+    const ghost = state.ghosts[activeGhost];
+    resetDailyIfNeeded(activeGhost);
+    mode.textContent = "褰撳墠鍏绘垚";
+    title.textContent = soulDisplay[activeGhost]?.name || ghostCatalog[activeGhost]?.name || "鏈€夋嫨";
+    meta.textContent = `浠婃棩 ${Math.max(0, 10 - ghost.daily)}/10`;
+  }
+  if (currentTab === "Gacha") {
+    const poolId = document.getElementById("tabGacha")?.dataset.pool || "limited";
+    const pool = pools[poolId];
+    const pity = state.pity[poolId];
+    mode.textContent = "鍙鍗℃睜";
+    title.textContent = pool.name;
+    meta.textContent = `SSR ${pool.ssrPity - pity.ssr} 鎶藉唴蹇呭嚭`;
+  }
+  if (currentTab === "Bag") {
+    const count = bagEntriesFor(activeBagTab).length;
+    mode.textContent = "鑳屽寘瀹归噺";
+    title.textContent = bagCategoryName(activeBagTab);
+    meta.textContent = `${count}/48`;
+  }
+  if (currentTab === "Hub") {
+    mode.textContent = "主界面";
+    title.textContent = "九号楼";
+    meta.textContent = "档案待处理";
+  }
+  updateContextHint();
+}
+
+function currencyLabel(type) {
+  return type === "gold" ? "\u91d1" : "\u7075";
+}
+
+function updateCurrencyDisplays(root = document) {
+  root.querySelectorAll(".hub-gold-value, .story-hud-gold-value, .summon-gold span, .bag-art-gold span, .soul-gold span").forEach(el => {
+    el.textContent = state.currency?.gold ?? 0;
+  });
+  root.querySelectorAll(".hub-spirit-value, .story-hud-spirit-value, .summon-spirit span, .bag-art-spirit span, .soul-spirit span").forEach(el => {
+    el.textContent = state.currency?.spirit ?? 0;
+  });
+}
+
+function updateContextHint() {
+  const hint = document.getElementById("contextHint");
+  if (!hint) return;
+  const text = {
+    Story: "点击章节或回合进入剧情，完成当前回合后才会解锁下一回合。",
+    Raise: "在御魂中赠送道具可提升好感度，不同道具效果不同。",
+    Gacha: "普通召唤消耗金币，神秘召唤消耗灵。",
+    Bag: "在背包中选择道具后点击使用，可直接跳转御魂界面。"
+  }[currentTab] || "";
+  hint.textContent = text;
+}
+
+function updateFx() {}
+
+function notify(text, tone = "info") {
+  const layer = document.getElementById("toastLayer");
+  if (!layer) return;
+  layer.className = `toast-layer ${tone}`;
+  layer.textContent = text;
+  clearTimeout(notify.timer);
+  notify.timer = setTimeout(() => {
+    layer.className = "toast-layer hidden";
+  }, 1800);
+}
+
+function applyGift(ghostId, itemId, count, silent = false) {
+  const ghost = state.ghosts[ghostId];
+  const item = items[itemId];
+  if (!ghost || !item) return;
+  const gainedExp = Math.round((item.trust || 0) * count * 100);
+  const levelResult = addAffinityExp(ghost, gainedExp);
+  const totalTrust = ((ghost.affinityLevel - 1) * affinityExpPerLevel + ghost.affinityExp) / affinityExpPerLevel * 12.5;
+  ghost.trust = Math.max(0, Math.min(100, Math.round(totalTrust)));
+  ghost.danger = Math.max(0, Math.min(100, ghost.danger + Math.round((item.danger || 0) * count)));
+  if (!silent) notify(levelResult.after > levelResult.before ? "\u597d\u611f\u7b49\u7ea7\u63d0\u5347" : "\u9972\u80b2\u5df2\u751f\u6548", "info");
+  return levelResult;
+}
+
+function bagEntriesFor(tab = activeBagTab) {
+  return Object.entries(state.bag || {}).filter(([, count]) => count > 0).map(([id, count]) => ({ id, count }));
+}
+
+function bagCategoryName(tab = activeBagTab) {
+  const names = {
+    items: "\u9053\u5177\u80cc\u5305",
+    cards: "\u5361\u724c\u80cc\u5305",
+    all: "\u5168\u90e8"
+  };
+  return names[tab] || names.items;
+}
+
+function showChapterModal(chapter, done) {
+  const layer = document.getElementById("modalLayer");
+  if (!layer) return;
+  layer.className = "modal-layer";
+  layer.innerHTML = `
+    <article class="game-modal chapter-modal">
+      <button class="modal-close" data-close="1">\u00d7</button>
+      <div class="modal-thumb">${chapter.thumb || "\u5377"}</div>
+      <div>
+        <span class="kicker">Story Round</span>
+        <h2>${chapter.title}</h2>
+        <p>${chapter.desc || ""}</p>
+        <div class="modal-actions">
+          <button class="primary" data-enter="1">${done ? "\u56de\u987e\u5267\u60c5" : "\u8fdb\u5165\u5267\u60c5"}</button>
+          <button data-close="1">\u53d6\u6d88</button>
+        </div>
+      </div>
+    </article>
+  `;
+  layer.querySelector("[data-enter]")?.addEventListener("click", () => {
+    closeModal();
+    startStory(chapter.id);
+  });
+  layer.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", closeModal));
+}
+
+function showRoundEnterModal(round) {
+  const layer = document.getElementById("modalLayer");
+  if (!layer || !round) return;
+  layer.className = "modal-layer story-enter-layer";
+  layer.innerHTML = `
+    <article class="story-enter-modal">
+      <img class="story-enter-bg" src="./assets/story_ui/bg_round_enter.png" alt="">
+      <div class="story-enter-copy">
+        <h2>${round.title || "\u672a\u547d\u540d\u56de\u5408"}</h2>
+        <p>${round.desc || "\u786e\u8ba4\u662f\u5426\u8fdb\u5165\u8be5\u6bb5\u5267\u60c5\uff1f"}</p>
+      </div>
+      <button class="story-enter-close" data-close="1" type="button">
+        <img src="./assets/story_ui/btn_round_enter.png" alt="">
+        <span>\u6682\u65f6\u79bb\u5f00</span>
+      </button>
+      <button class="story-enter-btn" data-enter="1" type="button">
+        <img src="./assets/story_ui/btn_round_enter.png" alt="">
+        <span>\u8fdb\u5165\u5267\u60c5</span>
+      </button>
+    </article>
+  `;
+  layer.querySelector("[data-enter]")?.addEventListener("click", () => {
+    closeModal();
+    startStory(round.id);
+  });
+  layer.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", closeModal));
+}
+
+function closeModal() {
+  const layer = document.getElementById("modalLayer");
+  if (!layer) return;
+  layer.className = "modal-layer hidden";
+  layer.innerHTML = "";
+}
+
+function hasPendingBranchChoice() {
+  const choices = document.getElementById("choices");
+  return !!choices && choices.querySelectorAll("button").length > 0;
+}
+
+function renderRaiseTab() {
+  const root = document.getElementById("tabRaise");
+  if (!root) return;
+  const ghost = state.ghosts[activeGhost] || { trust: 0, danger: 0, stage: 1, daily: 0 };
+  const catalog = { ...(ghostCatalog[activeGhost] || {}), ...(soulDisplay[activeGhost] || { name: "\u955c\u4e2d\u5f71", rarity: "SSR", quote: "" }) };
+  const affinity = normalizeAffinity(ghost);
+  const trust = Math.max(0, Math.min(100, ((affinity.level - 1) * affinityExpPerLevel + affinity.exp) / (affinityMaxLevel * affinityExpPerLevel) * 100));
+  const lore = soulLore[activeGhost] || soulLore.mirror;
+  const itemCells = Array.from({ length: 35 }, (_, index) => {
+    const itemId = soulGiftItems[index % soulGiftItems.length];
+    const item = giftDisplay[itemId] || items[itemId] || { name: "\u793c\u7269", icon: "\u7269", hint: "" };
+    const count = state.bag?.[itemId] || 0;
+    const owned = index < soulGiftItems.length && count > 0;
+    return `
+      <button class="soul-item ${owned ? "owned" : ""}" type="button" ${index < soulGiftItems.length ? `data-gift-id="${itemId}"` : ""}>
+        <img src="./assets/raise_ui/item_panel.png" alt="">
+        <span class="soul-plus">${index < soulGiftItems.length ? `<img src="${getItemIconPath(itemId)}" alt="${item.name}">` : "+"}</span>
+        ${index < soulGiftItems.length ? `<small>x${count}</small><strong>${item.name}</strong>` : ""}
+      </button>
+    `;
+  }).join("");
+  const affinityTitle = affinity.title;
+  const feedContent = `
+          <div class="soul-title">${affinity.title}</div>
+          <div class="soul-exp">
+            <img class="soul-exp-bg" src="./assets/raise_ui/exp_bar_bg.png" alt="">
+            <img class="soul-exp-bar" src="./assets/raise_ui/exp_bar.png" alt="" style="width:${affinity.progress}%">
+            <p><span>Lv.${affinity.level}</span>銆€${affinity.exp} /${affinityExpPerLevel}</p>
+          </div>
+          <div class="soul-item-area">
+            <div class="soul-items">
+              ${itemCells}
+            </div>
+            <div class="soul-scrollbar">
+              <img class="soul-slider-bg" src="./assets/raise_ui/slider_bg.png" alt="">
+              <img class="soul-slider-bar" src="./assets/raise_ui/slider_bar.png" alt="">
+            </div>
+          </div>
+          <p class="soul-tip">\u8d60\u9001\u793c\u7269\uff0c\u53ef\u4ee5\u63d0\u5347\u597d\u611f\u5fe0\u8bda\u5ea6</p>
+  `;
+  const infoContent = `
+          <div class="soul-title">${affinityTitle}</div>
+          <div class="soul-exp soul-info-exp">
+            <img class="soul-exp-bg" src="./assets/raise_ui/exp_bar_bg.png" alt="">
+            <img class="soul-exp-bar" src="./assets/raise_ui/exp_bar.png" alt="" style="width:${lore.bond || trust}%">
+            <p><span>${lore.bond || Math.round(trust)}</span> /100</p>
+          </div>
+          <div class="soul-info-body">
+            ${(lore.info || []).map((line, index) => `<p class="${index > 1 ? "long" : ""}">${line}</p>`).join("")}
+          </div>
+          <div class="soul-info-footer">
+            <span>\u5371\u9669\u7b49\u7ea7\uff1a<em>\u9ad8</em></span>
+            <span>\u6765\u6e90\uff1a11F\u672a\u5f52\u6863\u9879\u76ee\u7ec4</span>
+          </div>
+  `;
+  const bioRows = (lore.bios || []).map((bio, index) => {
+    const unlocked = index < 2 || trust >= 25 + index * 15;
+    return `
+      <button class="soul-bio-row ${unlocked ? "unlocked" : "locked"}" data-bio-index="${index}" type="button">
+        <img class="soul-bio-bg" src="./assets/raise_ui/bg_bio.png" alt="">
+        <span class="soul-bio-thumb"></span>
+        <span class="soul-bio-copy">
+          <strong>\u4f20\u8bb0${["\u4e00", "\u4e8c", "\u4e09", "\u56db", "\u4e94"][index]}\u3000${bio.title}</strong>
+          <small>${unlocked ? bio.brief : "\u672a\u89e3\u9501"}</small>
+        </span>
+        <img class="soul-bio-state" src="./assets/raise_ui/${unlocked ? "bio_active" : "bio_inactive"}.png?v=89" alt="">
+      </button>
+    `;
+  }).join("");
+  const bioContent = `
+          <div class="soul-title">\u4f20\u3000\u8bb0</div>
+          <div class="soul-bio-list">
+            ${bioRows}
+          </div>
+  `;
+  const soulPanelContent = activeSoulTab === "info" ? infoContent : activeSoulTab === "bio" ? bioContent : feedContent;
+  root.innerHTML = `
+    <div class="soul-screen">
+      <img class="soul-bg" src="./assets/module_bg/bg_soul_main.jpg" alt="">
+      <div class="soul-vignette"></div>
+      <button class="soul-back" type="button" aria-label="返回主界面">
+        <img src="./assets/raise_ui/btn_back.png" alt="">
+      </button>
+      <div class="soul-titlebar">
+        <img src="./assets/raise_ui/bar_title.png" alt="">
+        <strong>\u5fa1\u9b42</strong>
+      </div>
+
+      <div class="soul-currency soul-gold">
+        <img src="./assets/main_ui/frame_gold.png" alt="">
+        <span>152234</span>
+      </div>
+      <div class="soul-currency soul-spirit">
+        <img src="./assets/main_ui/frame_spirit.png" alt="">
+        <span>152234</span>
+      </div>
+
+      <aside class="soul-name-plate">
+        <img src="./assets/raise_ui/bar_ghost_name.png" alt="">
+        <strong>${catalog.name || "\u8be1\u5f02\u540d\u5b57"}</strong>
+      </aside>
+
+      <section class="soul-character soul-character-${activeGhost}" aria-label="寰￠瓊灞曠ず">
+        <div class="soul-character-aura"></div>
+        <div class="soul-character-figure"><img src="${soulPortraits[activeGhost] || ""}" alt="${catalog.name || ""}"></div>
+        <button class="soul-page soul-page-prev" type="button"><img src="./assets/raise_ui/btn_page.png" alt=""></button>
+        <button class="soul-page soul-page-next" type="button"><img src="./assets/raise_ui/btn_page.png" alt=""></button>
+      </section>
+
+      <section class="soul-feed-panel">
+        <img class="soul-feed-frame" src="./assets/raise_ui/bg_feed_show.png" alt="">
+        <div class="soul-feed-content">
+          ${soulPanelContent}
+        </div>
+      </section>
+
+      <nav class="soul-side-tabs" aria-label="寰￠瓊鍒嗛〉">
+        <button class="${activeSoulTab === "feed" ? "selected" : ""}" data-soul-tab="feed" type="button"><img src="./assets/raise_ui/${activeSoulTab === "feed" ? "tab_selected" : "tab_unselected"}.png" alt=""><span>\u9972 \u517b</span></button>
+        <button class="${activeSoulTab === "info" ? "selected" : ""}" data-soul-tab="info" type="button"><img src="./assets/raise_ui/${activeSoulTab === "info" ? "tab_selected" : "tab_unselected"}.png" alt=""><span>\u60c5 \u62a5</span></button>
+        <button class="${activeSoulTab === "bio" ? "selected" : ""}" data-soul-tab="bio" type="button"><img src="./assets/raise_ui/${activeSoulTab === "bio" ? "tab_selected" : "tab_unselected"}.png" alt=""><span>\u4f20 \u8bb0</span></button>
+      </nav>
+    </div>
+  `;
+  root.querySelector(".soul-back")?.addEventListener("click", showMainHub);
+  root.querySelector(".soul-page-prev")?.addEventListener("click", () => switchSoul(-1));
+  root.querySelector(".soul-page-next")?.addEventListener("click", () => switchSoul(1));
+  root.querySelectorAll("[data-soul-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const nextTab = btn.dataset.soulTab || "feed";
+      const shouldOpenBio = nextTab === "bio" && activeSoulTab === "bio";
+      activeSoulTab = nextTab;
+      renderRaiseTab();
+      updateUiDebugTargets();
+      if (shouldOpenBio) window.setTimeout(() => showSoulBioModal(0), 40);
+    });
+  });
+  root.querySelectorAll("[data-gift-id]").forEach(btn => {
+    const openGift = event => {
+      event.stopPropagation();
+      feedSoulGift(btn.dataset.giftId);
+    };
+    btn.addEventListener("click", openGift);
+    btn.addEventListener("swipeclick", openGift);
+  });
+  root.querySelectorAll("[data-bio-index]").forEach(btn => {
+    const openBio = event => {
+      event.stopPropagation();
+      showSoulBioModal(Number(btn.dataset.bioIndex));
+    };
+    btn.addEventListener("click", openBio);
+    btn.addEventListener("swipeclick", openBio);
+  });
+  const items = root.querySelector(".soul-items");
+  const bar = root.querySelector(".soul-slider-bar");
+  const syncSoulSlider = () => {
+    if (!items || !bar) return;
+    const maxScroll = Math.max(1, items.scrollHeight - items.clientHeight);
+    const maxMove = Math.max(0, items.clientHeight - bar.clientHeight);
+    bar.style.transform = `translateY(${(items.scrollTop / maxScroll) * maxMove}px)`;
+  };
+  items?.addEventListener("scroll", syncSoulSlider, { passive: true });
+  bindSwipeScroll(items, syncSoulSlider);
+  bindSwipeScroll(root.querySelector(".soul-info-body"));
+  bindSwipeScroll(root.querySelector(".soul-bio-list"));
+  requestAnimationFrame(syncSoulSlider);
+}
+
+function feedSoulGift(itemId) {
+  if (!itemId || !soulGiftItems.includes(itemId)) return;
+  showSoulGiftModal(itemId);
+}
+
+function showSoulGiftModal(itemId) {
+  const item = giftDisplay[itemId] || items[itemId] || { name: "\u793c\u7269", icon: "\u7269" };
+  const count = state.bag?.[itemId] || 0;
+  const maxCount = Math.max(1, Math.min(10, count));
+  const layer = document.getElementById("modalLayer");
+  if (!layer) return;
+  layer.className = "modal-layer soul-gift-layer";
+  layer.innerHTML = `
+    <article class="soul-gift-modal">
+      <img class="soul-gift-frame" src="./assets/story_ui/frame_dialog.png" alt="">
+      <h2>\u9001\u51fa\u793c\u7269</h2>
+      <div class="soul-gift-preview">
+        <span>${item.icon || "\u7269"}</span>
+        <strong>${item.name}</strong>
+        <small>\u6301\u6709\uff1a${count}</small>
+      </div>
+      <div class="soul-gift-count">
+        <button data-gift-minus type="button">-</button>
+        <span data-gift-count>1</span>
+        <button data-gift-plus type="button">+</button>
+      </div>
+      <p>\u786e\u8ba4\u5c06\u8be5\u793c\u7269\u9001\u7ed9\u5f53\u524d\u5fa1\u9b42\uff1f</p>
+      <button class="soul-gift-cancel" data-close="1" type="button">
+        <img src="./assets/story_ui/btn_round_enter.png" alt="">
+        <span>\u53d6\u6d88</span>
+      </button>
+      <button class="soul-gift-confirm ${count <= 0 ? "disabled" : ""}" data-confirm-gift type="button">
+        <img src="./assets/story_ui/btn_round_enter.png" alt="">
+        <span>${count <= 0 ? "\u6570\u91cf\u4e0d\u8db3" : "\u786e\u5b9a\u9001\u51fa"}</span>
+      </button>
+    </article>
+  `;
+  let selectedCount = 1;
+  const countText = layer.querySelector("[data-gift-count]");
+  const renderCount = () => {
+    if (countText) countText.textContent = String(selectedCount);
+  };
+  layer.querySelector("[data-gift-minus]")?.addEventListener("click", () => {
+    selectedCount = Math.max(1, selectedCount - 1);
+    renderCount();
+  });
+  layer.querySelector("[data-gift-plus]")?.addEventListener("click", () => {
+    selectedCount = Math.min(maxCount, selectedCount + 1);
+    renderCount();
+  });
+  layer.querySelector("[data-confirm-gift]")?.addEventListener("click", () => {
+    if (count <= 0) {
+      notify("\u793c\u7269\u6570\u91cf\u4e0d\u8db3", "warn");
+      return;
+    }
+    confirmSoulGift(itemId, selectedCount);
+  });
+  layer.querySelector("[data-close]")?.addEventListener("click", closeModal);
+}
+
+function confirmSoulGift(itemId, count) {
+  const owned = state.bag?.[itemId] || 0;
+  const finalCount = Math.max(1, Math.min(count, owned));
+  if (finalCount <= 0) {
+    notify("\u793c\u7269\u6570\u91cf\u4e0d\u8db3", "warn");
+    closeModal();
+    return;
+  }
+  state.bag[itemId] = owned - finalCount;
+  const levelResult = applyGift(activeGhost, itemId, finalCount, true);
+  saveState();
+  const leveled = levelResult && levelResult.after > levelResult.before;
+  notify(leveled ? `\u597d\u611f\u63d0\u5347\u81f3 Lv.${levelResult.after}` : `${giftDisplay[itemId]?.name || "\u793c\u7269"} x${finalCount}\u5df2\u9001\u51fa`, "info");
+  closeModal();
+  renderRaiseTab();
+  updateUiDebugTargets();
+}
+
+function showSoulBioModal(index) {
+  const lore = soulLore[activeGhost] || soulLore.mirror;
+  const ghost = state.ghosts[activeGhost] || { trust: 0 };
+  const trust = Math.max(0, Math.min(100, ghost.trust || 45));
+  const bio = lore.bios?.[index];
+  const unlocked = index < 2 || trust >= 25 + index * 15;
+  if (!bio || !unlocked) {
+    notify("\u4f20\u8bb0\u5c1a\u672a\u89e3\u9501", "warn");
+    return;
+  }
+  const layer = document.getElementById("modalLayer");
+  if (!layer) return;
+  layer.className = "modal-layer soul-bio-layer";
+  layer.innerHTML = `
+    <article class="soul-bio-modal">
+      <img class="soul-bio-modal-frame" src="./assets/raise_ui/bg_feed_show.png" alt="">
+      <h2>${bio.title}</h2>
+      <div class="soul-bio-modal-body">
+        <p>${bio.body}</p>
+      </div>
+      <button class="soul-bio-modal-close" data-close="1" type="button">
+        <img src="./assets/story_ui/btn_round_enter.png" alt="">
+        <span>\u5173\u95ed</span>
+      </button>
+    </article>
+  `;
+  layer.querySelector("[data-close]")?.addEventListener("click", closeModal);
+  bindSwipeScroll(layer.querySelector(".soul-bio-modal-body"));
+}
+
+function renderGachaTab() {
+  const root = document.getElementById("tabGacha");
+  if (!root) return;
+  const isNormal = activeSummonPool === "normal";
+  const config = summonConfig[activeSummonPool] || summonConfig.normal;
+  root.innerHTML = `
+    <div class="summon-screen">
+      <img class="summon-bg" src="./assets/module_bg/bg_draw_main.jpg" alt="">
+      <div class="summon-bg-mask"></div>
+      <button class="summon-back" type="button" aria-label="\u8fd4\u56de\u4e3b\u754c\u9762"><img src="./assets/raise_ui/btn_back.png" alt=""></button>
+      <div class="summon-titlebar">
+        <img src="./assets/raise_ui/bar_title.png" alt="">
+        <strong>\u53ec\u5524</strong>
+        <small>SUMMON</small>
+      </div>
+
+      <div class="summon-currency summon-gold">
+        <img src="./assets/main_ui/frame_gold.png" alt="">
+        <span>${state.currency.gold}</span>
+      </div>
+      <div class="summon-currency summon-spirit">
+        <img src="./assets/main_ui/frame_spirit.png" alt="">
+        <span>${state.currency.spirit}</span>
+      </div>
+
+      <section class="summon-preview-panel">
+        <img class="summon-preview-bg" src="./assets/summon_ui/bar_ad_left.png" alt="">
+        <div class="summon-preview-main">
+          <img src="./assets/cards/SP001.png" alt="SP001">
+        </div>
+        <div class="summon-progress">
+          <span></span>
+        </div>
+        <div class="summon-reward-row">
+          <div class="summon-preview-card">
+            <img class="summon-preview-frame" src="./assets/summon_ui/frame_reward_preview.png" alt="">
+            <img class="summon-preview-face" src="./assets/cards/SP001.png" alt="SP001">
+          </div>
+          <img src="./assets/summon_ui/frame_reward_preview.png" alt="">
+          <img src="./assets/summon_ui/frame_reward_preview.png" alt="">
+        </div>
+      </section>
+
+      <img class="summon-fx" src="./assets/summon_ui/eff_summon.png" alt="">
+
+      <button class="summon-btn summon-once" type="button">
+        <img src="./assets/summon_ui/btn_summon.png" alt="">
+        <span>\u53ec\u5524\u4e00\u6b21</span>
+        <small>${currencyLabel(config.currency)} x${config.single}</small>
+      </button>
+      <button class="summon-btn summon-ten" type="button">
+        <img src="./assets/summon_ui/btn_summon.png" alt="">
+        <span>\u53ec\u5524\u5341\u6b21</span>
+        <small>${currencyLabel(config.currency)} x${config.ten}</small>
+      </button>
+
+      <aside class="summon-pool-panel">
+        <img class="summon-pool-frame" src="./assets/summon_ui/bg_summon.png" alt="">
+        <button class="summon-pool-card ${isNormal ? "selected" : ""}" data-summon-pool="normal" type="button">
+          <img src="./assets/summon_ui/summon_normal_${isNormal ? "selected" : "unselected"}.png" alt="">
+        </button>
+        <button class="summon-pool-card ${!isNormal ? "selected" : ""}" data-summon-pool="mystery" type="button">
+          <img src="./assets/summon_ui/summon_mystery_${!isNormal ? "selected" : "unselected"}.png" alt="">
+        </button>
+      </aside>
+      <div class="summon-result-layer hidden"></div>
+    </div>
+  `;
+  root.querySelector(".summon-back")?.addEventListener("click", showMainHub);
+  root.querySelector(".summon-once")?.addEventListener("click", () => performSummon(1));
+  root.querySelector(".summon-ten")?.addEventListener("click", () => performSummon(10));
+  root.querySelectorAll("[data-summon-pool]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeSummonPool = btn.dataset.summonPool || "normal";
+      renderGachaTab();
+      updateUiDebugTargets();
+    });
+  });
+}
+
+function pickFromWeighted(table) {
+  const total = table.reduce((sum, item) => sum + item.weight, 0);
+  let roll = Math.random() * total;
+  for (const item of table) {
+    roll -= item.weight;
+    if (roll <= 0) return item;
+  }
+  return table[0];
+}
+
+function pickCardByRarity(rarity) {
+  const pool = summonCards.filter(card => card.rarity === rarity);
+  if (!pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function createSummonResult(poolId) {
+  const drawRule = pickFromWeighted(summonRateTables[poolId] || summonRateTables.normal);
+  if (drawRule.kind === "item") {
+    const itemId = rewardItemPool[Math.floor(Math.random() * rewardItemPool.length)];
+    const itemDef = items[itemId] || {};
+    state.bag[itemId] = (state.bag[itemId] || 0) + 1;
+    return {
+      kind: "item",
+      id: itemId,
+      image: itemDef.iconPath || "./assets/item_icons/icon_book.png",
+      name: itemDef.name || itemId,
+      rarity: "N",
+      rarityLabel: "道具",
+      rare: false,
+      color: "#58c777"
+    };
+  }
+  const card = pickCardByRarity(drawRule.rarity) || pickCardByRarity("N");
+  if (!card) return null;
+  state.cards[card.id] = (state.cards[card.id] || 0) + 1;
+  const visual = rarityVisual[card.rarity] || rarityVisual.N;
+  return {
+    kind: "card",
+    id: card.id,
+    image: card.image,
+    name: card.name,
+    rarity: card.rarity,
+    rarityLabel: visual.label,
+    rare: visual.rare,
+    color: visual.color
+  };
+}
+
+function performSummon(count) {
+  const config = summonConfig[activeSummonPool] || summonConfig.normal;
+  const cost = count === 10 ? config.ten : config.single;
+  const current = state.currency[config.currency] || 0;
+  if (current < cost) {
+    notify(`${currencyLabel(config.currency)}\u4e0d\u8db3`, "warn");
+    return;
+  }
+  state.currency[config.currency] = current - cost;
+  const results = Array.from({ length: count }, () => createSummonResult(activeSummonPool)).filter(Boolean);
+  state.lastDraws = results;
+  saveState();
+  updateCurrencyDisplays();
+  renderBagTab();
+  showSummonResults(results);
+}
+
+function showSummonResults(results) {
+  const layer = document.querySelector("#tabGacha .summon-result-layer");
+  if (!layer) return;
+  const rare = results.find(item => item.rare);
+  layer.className = `summon-result-layer ${results.length === 1 ? "single" : "ten"}`;
+  layer.innerHTML = `
+    <div class="summon-result-backdrop"></div>
+    <section class="summon-result-board">
+      <div class="summon-result-grid">
+        ${results.map((card, index) => `
+          <button class="summon-card rarity-${card.rarity}" type="button" style="--rarity:${card.color}; --delay:${index * 110}ms">
+            <span class="summon-card-back"><img src="./assets/cards/card_back.png" alt=""></span>
+            <span class="summon-card-front">
+              <img src="${card.image}" alt="${card.name}">
+              <strong>${card.name}</strong>
+              <small>${card.rarityLabel}</small>
+            </span>
+          </button>
+        `).join("")}
+      </div>
+      <button class="summon-result-close" type="button">\u6536\u8d77</button>
+    </section>
+    ${rare ? `
+      <section class="summon-rare-show hidden rarity-${rare.rarity}">
+        <div class="summon-rare-card" style="--rarity:${rare.color}">
+          <img src="${rare.image}" alt="${rare.name}">
+          <strong>${rare.name}</strong>
+          <span>${rare.rarityLabel} 稀有</span>
+        </div>
+      </section>
+    ` : ""}
+  `;
+  requestAnimationFrame(() => {
+    layer.querySelectorAll(".summon-card").forEach((card, index) => {
+      window.setTimeout(() => card.classList.add("revealed"), 220 + index * 180);
+    });
+    if (rare) {
+      const rareShow = layer.querySelector(".summon-rare-show");
+      window.setTimeout(() => rareShow?.classList.remove("hidden"), 520 + results.length * 180);
+      rareShow?.addEventListener("click", () => rareShow.classList.add("hidden"));
+    }
+  });
+  layer.querySelector(".summon-result-close")?.addEventListener("click", () => {
+    layer.className = "summon-result-layer hidden";
+    layer.innerHTML = "";
+  });
+}
+
+function renderBagTab() {
+  const root = document.getElementById("tabBag");
+  if (!root) return;
+  const itemEntries = bagEntriesFor("items");
+  const cardEntries = Object.entries(state.cards || {})
+    .filter(([, count]) => count > 0)
+    .map(([id, count]) => {
+      const card = summonCards.find(entry => entry.id === id);
+      return card ? { ...card, count } : null;
+    })
+    .filter(Boolean);
+
+  const isCardBag = activeBagTab === "cards";
+  const entries = isCardBag ? cardEntries : itemEntries;
+  if (!activeBagItemId || !entries.some(entry => entry.id === activeBagItemId)) {
+    activeBagItemId = entries[0]?.id || null;
+  }
+
+  const selected = entries.find(entry => entry.id === activeBagItemId) || null;
+  const itemMeta = {
+    old_photo: { name: "\u7f20\u7ebf\u7eb8\u5076", icon: "\u5076", desc: "\u7528\u7ea2\u7ebf\u7f20\u7ed5\u7684\u7eb8\u5076\uff0c\u5934\u90e8\u5199\u6709\u6a21\u7cca\u7684\u5492\u6587\uff0c\u4f3c\u4e4e\u4e0e\u516c\u53f8\u5185\u90e8\u88ab\u5c01\u5b58\u7684\u5e9f\u5f03\u9879\u76ee\u6709\u5173\u3002", route: "\u63d0\u4ea4\u81f3\u5c01\u5b58\u6863\u6848\u5ba4\u7684\u732e\u796d\u53f0\uff0c\u53ef\u63d0\u5347\u4e0e\u7279\u5b9a\u7075\u4f53\u7684\u7f81\u7eca\u3002" },
+    cracked_lipstick: { name: "\u88c2\u53e3\u5507\u818f", icon: "\u5507", desc: "\u6ca1\u6709\u76d6\u5b50\u7684\u6697\u7ea2\u8272\u5507\u818f\uff0c\u6d82\u9762\u50cf\u88ab\u7259\u9f7f\u54ac\u65ad\u8fc7\u3002", route: "\u9002\u5408\u8d60\u4e88\u4f9d\u604b\u7c7b\u8be1\u5f02\uff0c\u4f46\u4f1a\u5e26\u6765\u5c11\u91cf\u4fb5\u8680\u3002" },
+    forbidden_incense: { name: "\u7981\u9999", icon: "\u9999", desc: "\u70b9\u71c3\u540e\u4f1a\u95fb\u5230\u96e8\u591c\u697c\u9053\u7684\u6c14\u5473\u3002", route: "\u7528\u4e8e\u9ad8\u98ce\u9669\u5951\u7ea6\uff0c\u4e00\u6b21\u6295\u5582\u5373\u4f1a\u663e\u8457\u6539\u53d8\u72b6\u6001\u3002" },
+    balance_charm: { name: "\u5236\u8861\u7b26", icon: "\u7b26", desc: "\u6cbe\u7740\u51b7\u7070\u7684\u7eb8\u7b26\uff0c\u8fb9\u89d2\u6709\u4e0d\u5c5e\u4e8e\u4eca\u591c\u7684\u6c34\u6e0d\u3002", route: "\u7528\u4e8e\u964d\u4f4e\u4fb5\u8680\u5371\u6b86\uff0c\u7a33\u5b9a\u5df2\u6536\u5bb9\u8be1\u5f02\u3002" },
+    shadow_contract: { name: "\u8be1\u5f71\u4e4b\u5951", icon: "\u5951", desc: "\u53ef\u4ee5\u542f\u52a8\u4e00\u6b21\u666e\u901a\u53ec\u5524\u7684\u5951\u7ea6\u51ed\u8bc1\u3002", route: "\u5728\u53ec\u5524\u754c\u9762\u6d88\u8017\uff0c\u53ef\u83b7\u5f97\u65b0\u8be1\u5f02\u6216\u5176\u8bb0\u5fc6\u6b8b\u7247\u3002" },
+    taboo_letter: { name: "\u7981\u5fcc\u4e4b\u7b3a", icon: "\u7b3a", desc: "\u7eb8\u9762\u6c38\u8fdc\u6f6e\u6e7f\uff0c\u5374\u4e0d\u4f1a\u6ef4\u6c34\u3002", route: "\u5728\u795e\u79d8\u53ec\u5524\u4e2d\u6d88\u8017\uff0c\u66f4\u5bb9\u6613\u89e6\u53d1\u5f02\u5e38\u5951\u7ea6\u3002" }
+  };
+
+  const visible = isCardBag
+    ? entries.map(entry => ({
+        ...entry,
+        desc: `品质：${entry.rarity}。由召唤获得的诡异卡牌。`,
+        route: "可在御魂界面查看、培养和解锁传记。"
+      }))
+    : entries.map(entry => ({ ...entry, ...(itemMeta[entry.id] || items[entry.id] || {}) }));
+  const selectedInfo = isCardBag
+    ? visible.find(item => item.id === activeBagItemId) || visible[0]
+    : selected ? { ...selected, ...(itemMeta[selected.id] || {}) } : visible[0];
+  const normalizedInfo = selectedInfo ? {
+    ...selectedInfo,
+    desc: selectedInfo.desc || "带有诡异气息的收容道具，可用于御魂系统养成与剧情推进。",
+    route: selectedInfo.route || "可在御魂界面进行赠礼或献祭。"
+  } : null;
+  const slotCount = isCardBag ? 15 : 25;
+  const cells = Array.from({ length: slotCount }, (_, index) => {
+    const item = visible[index];
+    const selectedClass = item && item.id === activeBagItemId ? "selected" : "";
+    const framePrefix = isCardBag ? "frame_card" : "frame_item";
+    return `
+      <button class="bag-art-slot ${selectedClass} ${item ? "filled" : "empty"}" type="button" ${item ? `data-bag-item="${item.id}"` : ""}>
+        <img src="./assets/bag_ui/${framePrefix}_${selectedClass ? "selected" : "unselected"}.png" alt="">
+        ${item ? (isCardBag
+          ? `<img class="bag-art-card-mini" src="${item.image}" alt="${item.name}"><small>x${item.count || 1}</small>`
+          : `<span class="bag-art-icon has-image"><img src="${getItemIconPath(item.id)}" alt="${item.name || item.id}"></span><small>x${item.count || 1}</small>`) : ""}
+      </button>
+    `;
+  }).join("");
+  const panelTitle = isCardBag ? "\u6211\u7684\u8be1\u5f02" : "\u6211\u7684\u9053\u5177";
+  const titleText = isCardBag ? "\u8be1\u5f02\u5323\u5b50" : "\u7eb3\u7269\u5e93";
+  root.innerHTML = `
+    <div class="bag-art-screen ${isCardBag ? "card-mode" : "item-mode"}">
+      <img class="bag-art-bg" src="./assets/module_bg/bg_bag_main.jpg" alt="">
+      <div class="bag-art-mask"></div>
+      <button class="bag-art-back" type="button" aria-label="\u8fd4\u56de\u4e3b\u754c\u9762"><img src="./assets/raise_ui/btn_back.png" alt=""></button>
+      <div class="bag-art-titlebar">
+        <img src="./assets/raise_ui/bar_title.png" alt="">
+        <strong>${titleText}</strong>
+      </div>
+      <div class="bag-art-currency bag-art-gold">
+        <img src="./assets/main_ui/frame_gold.png" alt="">
+        <span>152234</span>
+      </div>
+      <div class="bag-art-currency bag-art-spirit">
+        <img src="./assets/main_ui/frame_spirit.png" alt="">
+        <span>152234</span>
+      </div>
+
+      <section class="bag-art-grid-panel">
+        <img class="bag-art-grid-bg" src="./assets/bag_ui/${isCardBag ? "bg_card_panel" : "bg_item_panel"}.png" alt="">
+        <h2>${panelTitle}</h2>
+        <div class="bag-art-grid">
+          ${cells}
+        </div>
+      </section>
+
+      ${isCardBag ? `
+        <section class="bag-art-card-show">
+          <div class="bag-art-card-aura"></div>
+          <div class="bag-art-card-figure">
+            ${normalizedInfo ? `<img class="bag-art-card-face" src="${normalizedInfo.image}" alt="${normalizedInfo.name}">` : ""}
+          </div>
+        </section>
+      ` : `
+        <section class="bag-art-info">
+          <img class="bag-art-info-bg" src="./assets/bag_ui/bg_item_info_bar.png" alt="">
+          <h2>${normalizedInfo?.name || "\u9053\u5177\u540d\u5b57"}</h2>
+          <p class="bag-art-count">\u6301\u6709\uff1a <span>${normalizedInfo?.count || 0}</span></p>
+          <div class="bag-art-info-icon">
+            <img src="./assets/bag_ui/frame_item_info.png" alt="">
+            <span><img src="${normalizedInfo?.id ? getItemIconPath(normalizedInfo.id) : "./assets/item_icons/icon_book.png"}" alt="${normalizedInfo?.name || "物品"}"></span>
+          </div>
+          <img class="bag-art-line line-one" src="./assets/bag_ui/line_split.png" alt="">
+          <p class="bag-art-desc">${normalizedInfo?.desc || "\u9009\u62e9\u4e00\u4e2a\u9053\u5177\u67e5\u770b\u8be6\u60c5\u3002"}</p>
+          <img class="bag-art-line line-two" src="./assets/bag_ui/line_split.png" alt="">
+          <h3>\u4f7f\u7528\u8def\u5f84\uff1a</h3>
+          <p class="bag-art-route">${normalizedInfo?.route || ""}</p>
+          <button class="bag-art-use" type="button">
+            <img src="./assets/summon_ui/btn_summon.png" alt="">
+            <span>\u4f7f\u7528</span>
+          </button>
+        </section>
+      `}
+
+      <nav class="bag-art-tabs" aria-label="\u80cc\u5305\u5206\u7c7b">
+        <button class="${isCardBag ? "selected" : ""}" data-bag-tab="cards" type="button">
+          <img src="./assets/bag_ui/${isCardBag ? "tab_box_selected" : "tab_box_unselected"}.png" alt="">
+          <span>\u8be1\u5f02\u5323\u5b50</span>
+        </button>
+        <button class="${!isCardBag ? "selected" : ""}" data-bag-tab="items" type="button">
+          <img src="./assets/bag_ui/${!isCardBag ? "tab_box_selected" : "tab_box_unselected"}.png" alt="">
+          <span>\u9053\u5177\u5323\u5b50</span>
+        </button>
+      </nav>
+    </div>
+  `;
+  root.querySelector(".bag-art-back")?.addEventListener("click", showMainHub);
+  root.querySelectorAll("[data-bag-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeBagTab = btn.dataset.bagTab || "items";
+      activeBagItemId = null;
+      renderBagTab();
+      updateUiDebugTargets();
+    });
+  });
+  root.querySelectorAll("[data-bag-item]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeBagItemId = btn.dataset.bagItem;
+      renderBagTab();
+      updateUiDebugTargets();
+    });
+  });
+  root.querySelector(".bag-art-use")?.addEventListener("click", () => {
+    activeSoulTab = "feed";
+    openModule("Raise");
+  });
+}
+
+function bindVerticalDragScroll(element, onTap, options = {}) {
+  if (element.dataset.dragBound === "1") return;
+  element.dataset.dragBound = "1";
+  let pointerId = null;
+  let startTarget = null;
+  let pressedButton = null;
+  let suppressClick = false;
+  element.addEventListener("wheel", event => {
+    event.preventDefault();
+    element.scrollTop += event.deltaY;
+  }, { passive: false });
+
+  let startY = 0;
+  let startScroll = 0;
+  let dragged = false;
+  element.addEventListener("pointerdown", event => {
+    if (event.button !== 0) return;
+    pointerId = event.pointerId;
+    startTarget = event.target;
+    pressedButton = event.target?.closest?.("button");
+    if (pressedButton && element.contains(pressedButton) && options.pressClass) {
+      pressedButton.classList.remove(options.pressClass);
+      void pressedButton.offsetWidth;
+      pressedButton.classList.add(options.pressClass);
+    }
+    startY = event.clientY;
+    startScroll = element.scrollTop;
+    dragged = false;
+    element.classList.add("dragging");
+    element.setPointerCapture?.(event.pointerId);
+  });
+  element.addEventListener("pointermove", event => {
+    if (pointerId !== event.pointerId || !element.classList.contains("dragging")) return;
+    const delta = event.clientY - startY;
+    if (Math.abs(delta) > 4) {
+      dragged = true;
+      if (pressedButton && options.pressClass) pressedButton.classList.remove(options.pressClass);
+    }
+    element.scrollTop = startScroll - delta;
+  });
+  element.addEventListener("pointerup", event => {
+    const target = startTarget;
+    const wasDragged = dragged;
+    const button = pressedButton;
+    pointerId = null;
+    startTarget = null;
+    pressedButton = null;
+    element.classList.remove("dragging");
+    element.releasePointerCapture?.(event.pointerId);
+    if (!wasDragged && typeof onTap === "function") {
+      const tapButton = button || target?.closest?.("button");
+      if (tapButton && element.contains(tapButton)) {
+        suppressClick = true;
+        onTap(tapButton, event);
+      }
+    }
+  });
+  element.addEventListener("pointercancel", () => {
+    if (pressedButton && options.pressClass) pressedButton.classList.remove(options.pressClass);
+    pointerId = null;
+    startTarget = null;
+    pressedButton = null;
+    element.classList.remove("dragging");
+  });
+  element.addEventListener("click", event => {
+    if (!dragged && !suppressClick) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragged = false;
+    suppressClick = false;
+  }, true);
+}
+
+function bindSwipeScroll(element, onScroll) {
+  if (!element || element.dataset.swipeBound === "1") return;
+  element.dataset.swipeBound = "1";
+  let pointerId = null;
+  let startY = 0;
+  let startScroll = 0;
+  let dragged = false;
+
+  element.addEventListener("wheel", event => {
+    event.preventDefault();
+  }, { passive: false });
+
+  element.addEventListener("pointerdown", event => {
+    if (event.button !== 0) return;
+    pointerId = event.pointerId;
+    startY = event.clientY;
+    startScroll = element.scrollTop;
+    dragged = false;
+    element.classList.add("dragging");
+    element.setPointerCapture?.(event.pointerId);
+  });
+
+  element.addEventListener("pointermove", event => {
+    if (pointerId !== event.pointerId) return;
+    const delta = event.clientY - startY;
+    if (Math.abs(delta) > 3) dragged = true;
+    element.scrollTop = startScroll - delta;
+    onScroll?.();
+  });
+
+  element.addEventListener("pointerup", event => {
+    if (!dragged) {
+      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-gift-id], [data-bio-index]");
+      if (target && element.contains(target)) {
+        target.dispatchEvent(new CustomEvent("swipeclick", { bubbles: true }));
+      }
+    }
+    pointerId = null;
+    element.classList.remove("dragging");
+    element.releasePointerCapture?.(event.pointerId);
+  });
+
+  element.addEventListener("pointercancel", () => {
+    pointerId = null;
+    element.classList.remove("dragging");
+  });
+
+  element.addEventListener("click", event => {
+    if (!dragged) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragged = false;
+  }, true);
+}
+
+function playStoryPress(element, className, next) {
+  element.classList.remove(className);
+  void element.offsetWidth;
+  element.classList.add(className);
+  const actionDelay = className === "chapter-clicked" ? 260 : 90;
+  const clearDelay = className === "chapter-clicked" ? 520 : 140;
+  window.setTimeout(next, actionDelay);
+  window.setTimeout(() => element.classList.remove(className), clearDelay);
+}
+
+function renderStoryTab() {
+  const root = document.getElementById("tabStory");
+  const fallbackChapter = firstUnlockedStoryChapter();
+  const selectedChapter = storyChapters.find(chapter => chapter.id === activeStoryChapterId) || fallbackChapter;
+  activeStoryChapterId = selectedChapter.id;
+  const selectedRound = firstPlayableRound(selectedChapter);
+
+  root.innerHTML = `
+    <div class="story-screen story-compose">
+      <img class="story-bg-layer story-bg-a active" alt="">
+      <img class="story-bg-layer story-bg-b" alt="">
+      <div class="story-dim"></div>
+      <img class="story-hud-avatar" src="./assets/main_ui/frame_avatar.png" alt="">
+      <div class="story-hud-player"><strong>${playerDisplayName()}</strong></div>
+      <img class="story-hud-gold" src="./assets/main_ui/frame_gold.png" alt="">
+      <span class="story-hud-gold-value">152234</span>
+      <img class="story-hud-spirit" src="./assets/main_ui/frame_spirit.png" alt="">
+      <span class="story-hud-spirit-value">152234</span>
+      <img class="story-decor-line" src="./assets/story_ui/decor_pattern.png" alt="">
+      <section class="story-chapter-list" aria-label="\u5267\u60c5\u7ae0\u8282"></section>
+      <aside class="story-turn-panel" aria-label="\u7ae0\u8282\u56de\u5408">
+        <img class="story-turn-bg" src="./assets/story_ui/turn_bg.png" alt="">
+        <div class="story-turn-list"></div>
+      </aside>
+      <div class="story-bottom-tabs" aria-label="\u4e3b\u529f\u80fd">
+        <img class="story-bottom-pattern" src="./assets/main_ui/bg_pattern.png" alt="">
+        <img class="story-bottom-active story-active-story" src="./assets/main_ui/press/btn_story_press.png" alt="">
+        <button data-story-tab="Story" class="story-tab-hit story-tab-story" title="\u5267\u60c5"></button>
+        <button data-story-tab="Raise" class="story-tab-hit story-tab-raise" title="\u517b\u6210"></button>
+        <button data-story-tab="Gacha" class="story-tab-hit story-tab-gacha" title="\u53ec\u5524"></button>
+        <button data-story-tab="Bag" class="story-tab-hit story-tab-bag" title="\u80cc\u5305"></button>
+        <button data-story-tab="Archive" class="story-tab-hit story-tab-archive" title="\u6863\u6848\u5ba4"></button>
+      </div>
+    </div>
+  `;
+
+  const screen = root.querySelector(".story-compose");
+  const chapterRoot = root.querySelector(".story-chapter-list");
+  const turnRoot = root.querySelector(".story-turn-list");
+  let activeBgIndex = 0;
+  let bgReady = false;
+  const setStoryBackground = chapter => {
+    const layers = screen.querySelectorAll(".story-bg-layer");
+    if (layers.length < 2) {
+      screen.style.setProperty("--story-bg-image", `url("${chapter.bg}")`);
+      return;
+    }
+    if (!bgReady) {
+      layers[0].src = chapter.bg;
+      layers[0].classList.add("active");
+      layers[1].classList.remove("active");
+      bgReady = true;
+      return;
+    }
+    const nextIndex = activeBgIndex === 0 ? 1 : 0;
+    const current = layers[activeBgIndex];
+    const next = layers[nextIndex];
+    if (next.src.endsWith(chapter.bg.replace("./", "")) && next.classList.contains("active")) return;
+    next.src = chapter.bg;
+    next.classList.add("active");
+    current.classList.remove("active");
+    activeBgIndex = nextIndex;
+  };
+  const refreshChapterStates = () => {
+    const chapter = storyChapters.find(item => item.id === activeStoryChapterId) || selectedChapter;
+    chapterRoot.querySelectorAll(".story-chapter-card").forEach(card => {
+      const item = storyChapters.find(entry => entry.id === card.dataset.chapterId);
+      if (!item) return;
+      const unlocked = isStoryChapterUnlocked(item);
+      const current = item.id === chapter.id;
+      card.classList.toggle("current", current);
+      card.classList.toggle("done", isStoryChapterDone(item));
+      card.classList.toggle("locked", !unlocked);
+      const img = card.querySelector("img");
+      if (img) {
+        const frame = unlocked ? (current ? "chapter_selected" : "chapter_current") : "chapter_locked";
+        img.src = `./assets/story_ui/${frame}.png`;
+      }
+    });
+  };
+  const renderTurnCards = chapter => {
+    const activeRound = firstPlayableRound(chapter);
+    const rounds = [...chapter.rounds];
+    while (rounds.length < 7) {
+      rounds.push({
+        id: `${chapter.id}-locked-${rounds.length + 1}`,
+        title: "\u672a\u89e3\u9501",
+        desc: "\u540e\u7eed\u56de\u5408\u5c1a\u672a\u5f00\u653e\u3002",
+        locked: true
+      });
+    }
+    turnRoot.innerHTML = "";
+    turnRoot.scrollTop = 0;
+    rounds.forEach((round, index) => {
+      const unlocked = !round.locked && state.unlockedChapters.includes(round.id);
+      const done = state.completedChapters.includes(round.id);
+      const current = round.id === activeRound.id;
+      const row = document.createElement("button");
+      row.className = `story-turn-card ${unlocked ? "" : "locked"} ${done ? "done" : ""} ${current ? "current" : ""}`;
+      row.dataset.roundIndex = String(index);
+      row._round = round;
+      row._unlocked = unlocked;
+      row.type = "button";
+      row.innerHTML = `
+        <img src="./assets/story_ui/${unlocked ? "turn_current" : "turn_locked"}.png" alt="">
+        <div class="story-turn-copy">
+          <strong>\u7b2c${index + 1}\u56de</strong>
+          <span>${unlocked ? round.title : "\u672a\u89e3\u9501"}</span>
+        </div>
+      `;
+      turnRoot.appendChild(row);
+    });
+  };
+
+  setStoryBackground(selectedChapter);
+
+  storyChapters.forEach((chapter, index) => {
+    const unlocked = isStoryChapterUnlocked(chapter);
+    const done = isStoryChapterDone(chapter);
+    const current = chapter.id === selectedChapter.id;
+    const card = document.createElement("button");
+    card.className = `story-chapter-card ${unlocked ? "" : "locked"} ${done ? "done" : ""} ${current ? "current" : ""}`;
+    card.dataset.chapterId = chapter.id;
+    card._chapter = chapter;
+    card._unlocked = unlocked;
+    card.type = "button";
+    const chapterFrame = unlocked ? (current ? "chapter_selected" : "chapter_current") : "chapter_locked";
+    card.innerHTML = `
+      <img src="./assets/story_ui/${chapterFrame}.png" alt="">
+      <span class="story-chapter-thumb" style="background-image: url('${chapter.bg}')"></span>
+      <div class="story-chapter-copy">
+        <span>${chapter.label}</span>
+        <strong>${chapter.title}</strong>
+      </div>
+    `;
+    chapterRoot.appendChild(card);
+  });
+
+  renderTurnCards(selectedChapter);
+  bindVerticalDragScroll(chapterRoot, card => {
+    const chapter = card._chapter;
+    if (!chapter) return;
+    if (!card._unlocked) {
+      window.setTimeout(() => notify("\u8be5\u7ae0\u8282\u5c1a\u672a\u89e3\u9501", "warn"), 120);
+      return;
+    }
+    window.setTimeout(() => {
+      activeStoryChapterId = chapter.id;
+      setStoryBackground(chapter);
+      refreshChapterStates();
+      renderTurnCards(chapter);
+    }, 120);
+    window.setTimeout(() => card.classList.remove("chapter-clicked"), 520);
+  }, { pressClass: "chapter-clicked" });
+  bindVerticalDragScroll(turnRoot, row => {
+    const round = row._round;
+    if (!round) return;
+    if (!row._unlocked) {
+      window.setTimeout(() => notify("\u8be5\u56de\u5408\u5c1a\u672a\u89e3\u9501", "warn"), 80);
+      return;
+    }
+    window.setTimeout(() => showRoundEnterModal(round), 80);
+    window.setTimeout(() => row.classList.remove("turn-clicked"), 140);
+  }, { pressClass: "turn-clicked" });
+
+  const exitStoryThen = next => {
+    const screen = root.querySelector(".story-compose");
+    if (!screen) {
+      next();
+      return;
+    }
+    screen.classList.add("story-exit");
+    window.setTimeout(next, 360);
+  };
+
+  root.querySelectorAll("[data-story-tab]").forEach(btn => {
+    btn.onclick = () => {
+      if ((btn.dataset.storyTab === "Story" && currentTab === "Story") || btn.dataset.storyTab === "Archive") {
+        exitStoryThen(showMainHub);
+        return;
+      }
+      exitStoryThen(() => openModule(btn.dataset.storyTab));
+    };
+  });
+}
+
+function initializeControls() {
+  const enterButton = document.getElementById("enterGameBtn");
+  document.addEventListener("pointerdown", event => {
+    const button = event.target.closest?.("button");
+    if (!button || button.disabled) return;
+    playTapSound();
+    playBgm();
+  }, true);
+
+  enterButton?.addEventListener("click", () => {
+    enterButton.classList.remove("clicked");
+    void enterButton.offsetWidth;
+    enterButton.classList.add("clicked");
+    setTimeout(() => {
+      enterButton.classList.remove("clicked");
+      enterGame();
+    }, 120);
+  });
+
+  const playHubPress = (tabName, next) => {
+    const layer = document.getElementById("hubPressLayer");
+    const key = {
+      Story: "story",
+      Raise: "raise",
+      Gacha: "gacha",
+      Bag: "bag"
+    }[tabName];
+    if (!layer || !key) {
+      next();
+      return;
+    }
+    layer.src = `./assets/main_ui/main_hub_${key}_press.png`;
+    layer.classList.remove("hidden");
+    window.setTimeout(() => {
+      layer.classList.add("hidden");
+      next();
+    }, 140);
+  };
+
+  document.getElementById("dialogue")?.addEventListener("click", event => {
+    if (event.target.closest("button")) return;
+    if (hasPendingBranchChoice()) return;
+    engine?.next();
+  });
+
+  window.addEventListener("keydown", event => {
+    if (event.altKey && event.key.toLowerCase() === "a") {
+      event.preventDefault();
+      setUiDebugEnabled(!uiDebugEnabled);
+      return;
+    }
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key) && moveSelectedUiDebugTarget(event.key, event.shiftKey)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if (event.key === " " || event.key === "Enter") {
+      if (!document.getElementById("scene")?.classList.contains("hidden")) {
+        event.preventDefault();
+        if (hasPendingBranchChoice()) return;
+        engine?.next();
+      }
+    }
+  });
+
+  document.getElementById("saveStoryBtn")?.addEventListener("click", event => {
+    event.stopPropagation();
+    if (!engine) return;
+    state.storySave = engine.snapshot();
+    saveState();
+    notify("\u5267\u60c5\u5df2\u5b58\u6863", "info");
+  });
+
+  document.getElementById("loadStoryBtn")?.addEventListener("click", event => {
+    event.stopPropagation();
+    if (!state.storySave) {
+      notify("\u6682\u65e0\u5267\u60c5\u5b58\u6863", "warn");
+      return;
+    }
+    if (state.storySave.type === "spreadsheet" && state.storySave.roundId) {
+      startStory(state.storySave.roundId, null, state.storySave);
+      return;
+    }
+    engine = new StoryEngine(state.storySave.raw, showStoryHome, state.storySave);
+    engine.next();
+  });
+
+  document.getElementById("autoBtn")?.addEventListener("click", event => {
+    event.stopPropagation();
+    if (!engine) return;
+    engine.auto = !engine.auto;
+    notify(engine.auto ? "\u81ea\u52a8\u64ad\u653e\u5f00\u542f" : "\u81ea\u52a8\u64ad\u653e\u5173\u95ed", "info");
+  });
+
+  document.getElementById("skipBtn")?.addEventListener("click", event => {
+    event.stopPropagation();
+    if (!engine) return;
+    engine.skip = !engine.skip;
+    notify(engine.skip ? "\u5feb\u8fdb\u5f00\u542f" : "\u5feb\u8fdb\u5173\u95ed", "info");
+    if (engine.skip) engine.next();
+  });
+
+  document.querySelectorAll("#mainHub .hub-hotspot").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.tab) {
+        playHubPress(btn.dataset.tab, () => openModule(btn.dataset.tab));
+        return;
+      }
+      notify("\u529f\u80fd\u5df2\u63a5\u5165", "info");
+    });
+  });
+
+  document.querySelectorAll("#nav button").forEach(btn => {
+    btn.addEventListener("click", () => openModule(btn.dataset.tab));
+  });
+
+  document.getElementById("mainMenuBtn")?.addEventListener("click", showMainHub);
+}
+
+initializeUiDebug();
+initializeControls();
+showTitleScreen();
+
