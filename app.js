@@ -1,6 +1,7 @@
 ﻿const STORAGE_KEY = "no9-building-save-v1";
 const UI_LAYOUT_KEY = "no9-building-ui-layout-v1";
 const UI_DEBUG_ENABLED_KEY = "no9-building-ui-debug-enabled";
+const DEV_FORCE_ONBOARDING_ON_REFRESH = true;
 
 const uiDebugTargets = [
   { id: "hub.avatar", selector: ".hub-avatar-frame", label: "\u5934\u50cf\u6846" },
@@ -617,9 +618,13 @@ function defaultState() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return saved ? mergeDefaults(saved) : defaultState();
+    const nextState = saved ? mergeDefaults(saved) : defaultState();
+    if (DEV_FORCE_ONBOARDING_ON_REFRESH) nextState.seenOpening = false;
+    return nextState;
   } catch {
-    return defaultState();
+    const nextState = defaultState();
+    if (DEV_FORCE_ONBOARDING_ON_REFRESH) nextState.seenOpening = false;
+    return nextState;
   }
 }
 
@@ -1084,15 +1089,12 @@ function showPlayerNameModal(done) {
   let currentName = state.playerName || names[Math.floor(Math.random() * names.length)];
   layer.innerHTML = `
     <article class="name-entry-modal">
-      <img class="name-entry-bg" src="./assets/onboarding/qumingxiaoguotu.png" alt="">
       <div class="name-entry-panel">
         <img src="./assets/onboarding/bg_naming_panel.png" alt="">
-        <strong>\u8bf7\u8f93\u5165\u4f60\u7684\u540d\u5b57</strong>
         <button class="name-random" type="button" title="\u968f\u673a\u540d\u5b57">
           <img src="./assets/onboarding/btn_random_name.png" alt="">
         </button>
         <button class="name-entry-value" type="button" title="\u5f53\u524d\u540d\u5b57"></button>
-        <p>\u540d\u5b57\u5c06\u51b3\u5b9a\u4f60\u5728 <em>9</em> \u53f7\u697c\u7684\u547d\u8fd0</p>
         <button class="name-confirm" type="button">
           <img src="./assets/onboarding/btn_common.png" alt="">
           <span>\u8fdb\u5165\u8be1\u4e8b</span>
@@ -1125,7 +1127,7 @@ function showRoleSelectModal(done) {
   layer.className = "modal-layer role-select-layer";
   layer.innerHTML = `
     <section class="role-select-screen" aria-label="\u9009\u62e9\u89d2\u8272">
-      <img class="role-select-bg" src="./assets/onboarding/xuanjuexiaoguotu.png" alt="">
+      <img class="role-select-bg" src="./assets/chapter1/bg/\u8fdb\u95e8\u6253\u53612.jpg" alt="">
       <button class="role-card role-card-male selected" data-gender="male" type="button" title="\u7537\u4e3b">
         <img src="./assets/onboarding/bg_role_select_male.png" alt="">
       </button>
@@ -2854,4 +2856,3 @@ function initializeControls() {
 initializeUiDebug();
 initializeControls();
 showTitleScreen();
-

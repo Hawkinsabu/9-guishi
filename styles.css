@@ -4308,20 +4308,34 @@ body {
 .story-chapter-thumb {
   position: absolute;
   z-index: 3;
-  left: 4.2%;
-  top: 15.9%;
-  width: 24.4%;
+  left: 6.85%;
+  top: 10.45%;
+  width: 27.2%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background-position: center;
-  background-size: cover;
+  background-position: var(--chapter-thumb-position, center);
+  background-size: var(--chapter-thumb-size, 255% auto);
+  background-repeat: no-repeat;
   box-shadow:
-    inset 0 0 18px rgba(0,0,0,.78),
+    inset 0 0 22px rgba(0,0,0,.76),
     0 0 0 1px rgba(185,154,86,.22);
   filter: saturate(.9) brightness(.62) contrast(1.08);
   pointer-events: none;
   overflow: hidden;
   clip-path: circle(50% at 50% 50%);
+}
+
+.story-chapter-card:nth-child(1) .story-chapter-thumb {
+  --chapter-thumb-position: 48% 48%;
+}
+
+.story-chapter-card:nth-child(2) .story-chapter-thumb {
+  --chapter-thumb-position: 55% 44%;
+}
+
+.story-chapter-card:nth-child(n + 3) .story-chapter-thumb {
+  --chapter-thumb-position: 50% 52%;
+  --chapter-thumb-size: 230% auto;
 }
 
 .story-chapter-card.locked {
@@ -8131,4 +8145,186 @@ button:hover:not(:disabled) {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* v126 fixed-ratio stage and onboarding/art UI corrections */
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0 !important;
+}
+
+.app {
+  width: min(100vw, calc(100dvh * 16 / 9)) !important;
+  height: min(100dvh, calc(100vw * 9 / 16)) !important;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 0 0 1px rgba(114, 200, 184, .16), 0 28px 120px rgba(0,0,0,.72);
+}
+
+@supports not (height: 100dvh) {
+  .app {
+    width: min(100vw, calc(100vh * 16 / 9)) !important;
+    height: min(100vh, calc(100vw * 9 / 16)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    padding: 0 !important;
+  }
+
+  .app {
+    width: min(100vw, calc(100dvh * 16 / 9)) !important;
+    height: min(100dvh, calc(100vw * 9 / 16)) !important;
+    min-height: 0;
+  }
+}
+
+.role-select-screen {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+.role-select-bg {
+  object-fit: cover;
+  filter: brightness(.58) contrast(1.05) saturate(.9);
+}
+
+.role-select-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.62), rgba(0,0,0,.16) 28%, rgba(0,0,0,.16) 72%, rgba(0,0,0,.62)),
+    radial-gradient(circle at 50% 45%, transparent 34%, rgba(0,0,0,.46));
+}
+
+.role-card {
+  z-index: 2;
+  transition: none !important;
+}
+
+.role-select-screen .role-card,
+.role-select-screen .role-card:hover,
+.role-select-screen .role-card:focus,
+.role-select-screen .role-card:focus-visible,
+.role-select-screen .role-card:active,
+.role-select-screen .role-card:hover:not(:disabled) {
+  transform: none !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.role-confirm {
+  left: 50%;
+  bottom: 3.6%;
+  transform: translate3d(-50%, 0, 0) !important;
+  transition: none !important;
+}
+
+.role-select-screen .role-confirm,
+.role-confirm:hover,
+.role-confirm:focus,
+.role-confirm:focus-visible,
+.role-confirm:active,
+.role-confirm:hover:not(:disabled) {
+  transform: translate3d(-50%, 0, 0) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.name-entry-modal {
+  width: min(72vw, 128vh);
+  max-width: 96%;
+  max-height: 92%;
+  aspect-ratio: 862 / 651;
+}
+
+.name-entry-bg,
+.name-entry-panel strong,
+.name-entry-panel p {
+  display: none;
+}
+
+.name-entry-panel {
+  inset: 0;
+  width: 100%;
+  aspect-ratio: 862 / 651;
+}
+
+.name-entry-panel > img {
+  object-fit: contain;
+}
+
+.name-random {
+  right: 19%;
+  top: 42.7%;
+  width: 8%;
+}
+
+.soul-bio-modal {
+  width: min(36vw, 64vh);
+  height: auto;
+  max-height: 88vh;
+  aspect-ratio: 618 / 817;
+}
+
+.soul-bio-modal-frame {
+  object-fit: contain;
+}
+
+.soul-bio-modal h2 {
+  padding-top: 8.2%;
+  font-size: min(1.65vw, 2.93vh);
+}
+
+.soul-bio-modal-body {
+  width: 68%;
+  height: 64%;
+  margin-top: 6.2%;
+  padding-right: 2.5%;
+  font-size: min(.95vw, 1.69vh);
+  line-height: 1.78;
+  touch-action: pan-y;
+}
+
+.soul-bio-modal-close {
+  right: 13%;
+  bottom: 6.5%;
+  width: min(7.2vw, 12.8vh);
+}
+
+.bag-art-grid {
+  left: 3.8%;
+  width: 92.4%;
+  gap: 2.45% .7%;
+}
+
+.bag-art-screen.card-mode .bag-art-grid {
+  left: 9%;
+  width: 82%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-items: center;
+  gap: 1.85% 0;
+}
+
+.bag-art-screen.card-mode .bag-art-slot {
+  width: 114%;
+  justify-self: center;
+  transform: none !important;
+}
+
+.bag-art-screen.card-mode .bag-art-card-mini {
+  left: 3%;
+  top: 4%;
+  width: 94%;
+  height: 89%;
 }
