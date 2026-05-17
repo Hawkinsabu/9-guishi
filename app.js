@@ -3,6 +3,17 @@ const UI_LAYOUT_KEY = "no9-building-ui-layout-v1";
 const UI_DEBUG_ENABLED_KEY = "no9-building-ui-debug-enabled";
 const DEV_FORCE_ONBOARDING_ON_REFRESH = true;
 
+const startParams = new URLSearchParams(window.location.search);
+const forceNewUser = startParams.has("new") || startParams.has("reset");
+if (forceNewUser) {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(UI_LAYOUT_KEY);
+    localStorage.removeItem(UI_DEBUG_ENABLED_KEY);
+    sessionStorage.clear();
+  } catch {}
+}
+
 const uiDebugTargets = [
   { id: "hub.avatar", selector: ".hub-avatar-frame", label: "\u5934\u50cf\u6846" },
   { id: "hub.player", selector: ".hub-player-copy", label: "\u73a9\u5bb6\u540d" },
@@ -1127,7 +1138,6 @@ function showRoleSelectModal(done) {
   layer.className = "modal-layer role-select-layer";
   layer.innerHTML = `
     <section class="role-select-screen" aria-label="\u9009\u62e9\u89d2\u8272">
-      <img class="role-select-bg" src="./assets/chapter1/bg/\u8fdb\u95e8\u6253\u53612.jpg" alt="">
       <button class="role-card role-card-male selected" data-gender="male" type="button" title="\u7537\u4e3b">
         <img src="./assets/onboarding/bg_role_select_male.png" alt="">
       </button>
@@ -1349,27 +1359,36 @@ function presentCompletionRewards(reward, done) {
     done?.();
     return;
   }
-  const rows = Object.entries(reward.items || {});
+  const rewardCards = [
+    ...(reward.gold ? [{ id: "gold", icon: currencyIconPath("gold"), count: reward.gold, label: "\u91d1\u5e01" }] : []),
+    ...(reward.spirit ? [{ id: "spirit", icon: currencyIconPath("spirit"), count: reward.spirit, label: "\u7075" }] : []),
+    ...Object.entries(reward.items || {}).map(([id, count]) => ({
+      id,
+      icon: getItemIconPath(id),
+      count,
+      label: items[id]?.name || id
+    }))
+  ];
   layer.className = "modal-layer";
   layer.innerHTML = `
     <article class="game-modal reward-modal">
       <h2>获得奖励</h2>
-      <p class="reward-money">金币 +${reward.gold || 0}${reward.spirit ? `　灵 +${reward.spirit}` : ""}</p>
-      <div class="reward-list">
-        ${rows.map(([id, count]) => `
-          <div class="reward-row">
-            <div class="reward-item-meta">
-              <img src="${getItemIconPath(id)}" alt="${items[id]?.name || id}">
-              <span>${items[id]?.name || id}</span>
-            </div>
-            <strong>x${count}</strong>
+      <div class="reward-grid" style="--reward-count:${rewardCards.length}">
+        ${rewardCards.map((item, index) => `
+          <div class="reward-card" style="--reward-index:${index}" title="${item.label}">
+            <img src="${item.icon}" alt="${item.label}">
+            <strong>x${item.count}</strong>
           </div>
         `).join("")}
       </div>
-      <button class="primary" data-close-reward="1">确定</button>
+      <button class="primary reward-confirm" data-close-reward="1">确认</button>
     </article>
   `;
-  layer.querySelector("[data-close-reward]")?.addEventListener("click", () => {
+  const closeButton = layer.querySelector("[data-close-reward]");
+  window.setTimeout(() => {
+    closeButton?.classList.add("show");
+  }, Math.max(0, rewardCards.length - 1) * 120 + 280);
+  closeButton?.addEventListener("click", () => {
     closeModal();
     done?.();
   });
@@ -2304,7 +2323,7 @@ function renderBagTab() {
     desc: selectedInfo.desc || "带有诡异气息的收容道具，可用于御魂系统养成与剧情推进。",
     route: selectedInfo.route || "可在御魂界面进行赠礼或献祭。"
   } : null;
-  const slotCount = isCardBag ? 12 : 25;
+  const slotCount = isCardBag ? Math.max(24, visible.length) : 25;
   const cells = Array.from({ length: slotCount }, (_, index) => {
     const item = visible[index];
     const selectedClass = item && item.id === activeBagItemId ? "selected" : "";
@@ -2402,6 +2421,16 @@ function renderBagTab() {
       updateUiDebugTargets();
     });
   });
+  if (isCardBag) {
+    const cardGrid = root.querySelector(".bag-art-grid");
+    if (cardGrid) bindVerticalDragScroll(cardGrid, btn => {
+      const itemButton = btn.closest("[data-bag-item]");
+      if (!itemButton) return;
+      activeBagItemId = itemButton.dataset.bagItem;
+      renderBagTab();
+      updateUiDebugTargets();
+    });
+  }
   root.querySelector(".bag-art-use")?.addEventListener("click", () => {
     activeSoulTab = "feed";
     openModule("Raise");
