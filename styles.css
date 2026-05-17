@@ -4322,34 +4322,18 @@ body {
 .story-chapter-thumb {
   position: absolute;
   z-index: 3;
-  left: 6.85%;
-  top: 10.45%;
-  width: 27.2%;
+  left: 6.45%;
+  top: 8.95%;
+  width: 28.4%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background-position: var(--chapter-thumb-position, center);
-  background-size: var(--chapter-thumb-size, 255% auto);
+  background-position: center;
+  background-size: contain;
   background-repeat: no-repeat;
-  box-shadow:
-    inset 0 0 22px rgba(0,0,0,.76),
-    0 0 0 1px rgba(185,154,86,.22);
-  filter: saturate(.9) brightness(.62) contrast(1.08);
+  box-shadow: none;
+  filter: saturate(.96) brightness(.86) contrast(1.04);
   pointer-events: none;
-  overflow: hidden;
-  clip-path: circle(50% at 50% 50%);
-}
-
-.story-chapter-card:nth-child(1) .story-chapter-thumb {
-  --chapter-thumb-position: 48% 48%;
-}
-
-.story-chapter-card:nth-child(2) .story-chapter-thumb {
-  --chapter-thumb-position: 55% 44%;
-}
-
-.story-chapter-card:nth-child(n + 3) .story-chapter-thumb {
-  --chapter-thumb-position: 50% 52%;
-  --chapter-thumb-size: 230% auto;
+  overflow: visible;
 }
 
 .story-chapter-card.locked {
@@ -6382,6 +6366,7 @@ body {
 .soul-bio-layer {
   background: rgba(0,0,0,.62);
   backdrop-filter: blur(2px);
+  cursor: pointer;
 }
 
 .soul-bio-modal {
@@ -6391,6 +6376,7 @@ body {
   color: #eadfca;
   text-align: center;
   animation: rareShowIn .18s ease both;
+  cursor: default;
 }
 
 .soul-bio-modal-frame {
@@ -6427,7 +6413,8 @@ body {
   line-height: 1.8;
   text-align: left;
   scrollbar-width: none;
-  touch-action: none;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .soul-bio-modal-body::-webkit-scrollbar {
@@ -6435,7 +6422,11 @@ body {
 }
 
 .soul-bio-modal-body p {
-  margin: 0;
+  margin: 0 0 1em;
+}
+
+.soul-bio-modal-close {
+  display: none;
 }
 
 .soul-bio-modal-close {
@@ -6597,6 +6588,7 @@ body {
     radial-gradient(circle at 50% 46%, rgba(139, 24, 24, .18), transparent 36%),
     rgba(0,0,0,.62);
   backdrop-filter: blur(1px);
+  padding: 0;
 }
 
 .name-entry-modal {
@@ -6623,7 +6615,7 @@ body {
   left: 50%;
   top: 50%;
   z-index: 1;
-  width: calc(var(--u) * 64);
+  width: min(64%, calc(94% * 862 / 651));
   aspect-ratio: 862 / 651;
   transform: translate(-50%, -50%);
 }
@@ -8393,6 +8385,7 @@ body {
   top: 4%;
   width: 94%;
   height: 89%;
+}
 
 /* v83 global stage adaptation foundation */
 html {
@@ -8702,6 +8695,10 @@ button {
 }
 
 /* v132 rebase resolution: keep onboarding on 1920x1080 stage units */
+.name-entry-layer {
+  padding: 0;
+}
+
 .name-entry-modal {
   width: 100%;
   height: 100%;
@@ -8714,7 +8711,7 @@ button {
   inset: auto;
   left: 50%;
   top: 50%;
-  width: calc(var(--u) * 64);
+  width: min(64%, calc(94% * 862 / 651));
   aspect-ratio: 862 / 651;
   transform: translate(-50%, -50%);
 }
@@ -8757,4 +8754,67 @@ button {
   bottom: 2.2%;
   width: calc(var(--u) * 19.5);
   transform: translateX(-50%) !important;
+}
+
+/* v136 readability and summon rare-result polish */
+.line {
+  font-size: calc(var(--fs-md) * 1.14);
+  line-height: 1.72;
+}
+
+.choices button {
+  font-size: calc(var(--fs-md) * 1.12);
+  line-height: 1.24;
+}
+
+.soul-bio-modal-body {
+  font-size: min(1.16vw, 2.06vh);
+  line-height: 1.86;
+}
+
+.summon-result-layer .rarity-SSR,
+.summon-result-layer .rarity-SP,
+.summon-rare-show,
+.summon-rare-card {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.summon-rare-show {
+  background: rgba(0,0,0,.72);
+}
+
+.summon-rare-card {
+  width: min(28vw, 49.78vh);
+  padding: 0;
+  background: transparent;
+}
+
+.summon-rare-card img {
+  height: 100%;
+  filter: none;
+}
+
+/* v137 story speaker and biography readability */
+.speaker {
+  font-size: calc(var(--fs-md) * 1.26);
+  line-height: 1.2;
+}
+
+.soul-bio-copy small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.soul-bio-row.locked {
+  opacity: 1;
+}
+
+.soul-bio-modal-body {
+  font-size: min(1.34vw, 2.38vh);
+  line-height: 1.9;
 }
