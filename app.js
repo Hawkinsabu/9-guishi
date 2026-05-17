@@ -36,6 +36,8 @@ const uiDebugTargets = [
   { id: "summon.gold", selector: ".summon-gold", label: "\u53ec\u5524\u91d1\u5e01" },
   { id: "summon.spirit", selector: ".summon-spirit", label: "\u53ec\u5524\u7075" },
   { id: "summon.preview", selector: ".summon-preview-panel", label: "\u5956\u52b1\u9884\u89c8" },
+  { id: "summon.previewMain", selector: ".summon-preview-main", label: "\u53ec\u5524\u5de6\u4fa7\u5361\u724c" },
+  { id: "summon.previewCard", selector: ".summon-preview-main img", label: "\u53ec\u5524\u5de6\u4fa7\u5361\u724c\u56fe" },
   { id: "summon.fx", selector: ".summon-fx", label: "\u53ec\u5524\u9635" },
   { id: "summon.once", selector: ".summon-once", label: "\u53ec\u5524\u4e00\u6b21" },
   { id: "summon.ten", selector: ".summon-ten", label: "\u53ec\u5524\u5341\u6b21" },
@@ -46,14 +48,62 @@ const uiDebugTargets = [
   { id: "bag.spirit", selector: ".bag-art-spirit", label: "\u80cc\u5305\u7075" },
   { id: "bag.grid", selector: ".bag-art-grid-panel", label: "\u80cc\u5305\u683c\u5b50" },
   { id: "bag.info", selector: ".bag-art-info", label: "\u80cc\u5305\u8be6\u60c5" },
+  { id: "bag.infoIcon", selector: ".bag-art-info-icon", label: "\u80cc\u5305\u8be6\u60c5\u56fe\u6807" },
+  { id: "bag.cardShow", selector: ".bag-art-card-show", label: "\u8be1\u5f02\u5361\u5c55\u793a" },
+  { id: "bag.cardFigure", selector: ".bag-art-card-figure", label: "\u8be1\u5f02\u5361\u724c" },
+  { id: "bag.cardFace", selector: ".bag-art-card-face", label: "\u8be1\u5f02\u5361\u9762" },
   { id: "bag.tabs", selector: ".bag-art-tabs", label: "\u80cc\u5305\u5206\u7c7b" },
+  { id: "role.male", selector: ".role-card-male", label: "\u7537\u89d2\u5361" },
+  { id: "role.female", selector: ".role-card-female", label: "\u5973\u89d2\u5361" },
+  { id: "role.confirm", selector: ".role-confirm", label: "\u9009\u89d2\u786e\u5b9a" },
+  { id: "name.panel", selector: ".name-entry-panel", label: "\u53d6\u540d\u9762\u677f" },
+  { id: "name.value", selector: ".name-entry-value", label: "\u540d\u5b57" },
+  { id: "name.random", selector: ".name-random", label: "\u968f\u673a\u540d" },
+  { id: "name.confirm", selector: ".name-confirm", label: "\u53d6\u540d\u786e\u5b9a" },
+  { id: "story.screen", selector: ".story-compose", label: "\u5267\u60c5\u754c\u9762" },
+  { id: "story.hudAvatar", selector: ".story-hud-avatar", label: "\u5267\u60c5\u5934\u50cf" },
+  { id: "story.hudPlayer", selector: ".story-hud-player", label: "\u5267\u60c5\u73a9\u5bb6\u540d" },
+  { id: "story.hudGold", selector: ".story-hud-gold", label: "\u5267\u60c5\u91d1\u5e01" },
+  { id: "story.hudGoldText", selector: ".story-hud-gold-value", label: "\u5267\u60c5\u91d1\u5e01\u6570" },
+  { id: "story.hudSpirit", selector: ".story-hud-spirit", label: "\u5267\u60c5\u7075\u5e01" },
+  { id: "story.hudSpiritText", selector: ".story-hud-spirit-value", label: "\u5267\u60c5\u7075\u5e01\u6570" },
+  { id: "story.decorLine", selector: ".story-decor-line", label: "\u5267\u60c5\u88c5\u9970\u7ebf" },
   { id: "story.chapters", selector: ".story-chapter-list", label: "\u7ae0\u8282\u5217\u8868" },
-  { id: "story.turns", selector: ".story-turn-panel", label: "\u56de\u5408\u9762\u677f" }
+  { id: "story.chapterCard", selector: ".story-chapter-card", label: "\u7ae0\u8282\u6807\u7b7e" },
+  { id: "story.turns", selector: ".story-turn-panel", label: "\u56de\u5408\u9762\u677f" },
+  { id: "story.turnCard", selector: ".story-turn-card", label: "\u56de\u5408\u6807\u7b7e" },
+  { id: "story.bottomTabs", selector: ".story-bottom-tabs", label: "\u5267\u60c5\u5e95\u90e8\u6309\u94ae" },
+  { id: "story.bottomActive", selector: ".story-bottom-active", label: "\u5267\u60c5\u5e95\u90e8\u9009\u4e2d" },
+  { id: "story.tabButton", selector: ".story-tab-hit", label: "\u5267\u60c5\u529f\u80fd\u70ed\u533a" },
+  { id: "story.enterModal", selector: ".story-enter-modal", label: "\u8fdb\u5165\u5267\u60c5\u5f39\u7a97" },
+  { id: "story.enterCopy", selector: ".story-enter-copy", label: "\u8fdb\u5165\u5267\u60c5\u6587\u5b57" },
+  { id: "story.enterConfirm", selector: ".story-enter-btn", label: "\u8fdb\u5165\u5267\u60c5\u6309\u94ae" },
+  { id: "story.enterClose", selector: ".story-enter-close", label: "\u79bb\u5f00\u5267\u60c5\u6309\u94ae" },
+  { id: "dialogue.tools", selector: ".dialogue-tools", label: "\u5bf9\u8bdd\u5de5\u5177\u680f" },
+  { id: "dialogue.save", selector: "#saveStoryBtn", label: "\u5b58\u6863\u6309\u94ae" },
+  { id: "dialogue.load", selector: "#loadStoryBtn", label: "\u8bfb\u6863\u6309\u94ae" },
+  { id: "dialogue.auto", selector: "#autoBtn", label: "\u81ea\u52a8\u6309\u94ae" },
+  { id: "dialogue.skip", selector: "#skipBtn", label: "\u5feb\u8fdb\u6309\u94ae" }
 ];
 
 let uiDebugEnabled = false;
 let uiDebugLayout = {};
 let uiDebugSelectedId = null;
+
+const playerNamePools = {
+  male: [
+    "\u6797\u4e4b\u884c", "\u9646\u5b50\u6602", "\u8bb8\u5f52\u821f", "\u9648\u4e0d\u8bed", "\u6c88\u6dee\u5b89",
+    "\u5468\u660e\u5f7b", "\u987e\u5ef6\u5ddd", "\u79e6\u5c11\u5b81", "\u8d75\u666f\u8f9e", "\u97e9\u4e88\u58a8",
+    "\u5b8b\u4e34\u6df1", "\u675c\u95fb\u706f", "\u767d\u5b50\u5bd2", "\u4f55\u8d8a\u5c18", "\u5510\u5b89\u77f3",
+    "\u590f\u77e5\u8fdc", "\u7a0b\u661f\u9611", "\u5b63\u65e0\u5bd0", "\u65b9\u8d77\u5c9a", "\u8c22\u5f52\u96f6"
+  ],
+  female: [
+    "\u6797\u5c0f\u6ee1", "\u8bb8\u5ff5\u5b89", "\u9648\u9752\u68a7", "\u6c88\u661f\u56de", "\u5468\u665a\u6f84",
+    "\u987e\u660e\u7b19", "\u79e6\u82e5\u5b81", "\u8d75\u96e8\u5fae", "\u97e9\u4e88\u68e0", "\u5b8b\u77e5\u590f",
+    "\u675c\u95fb\u7b19", "\u767d\u5b50\u79cb", "\u4f55\u5ff5\u5c18", "\u5510\u5b89\u6b4c", "\u590f\u5c0f\u6e21",
+    "\u7a0b\u661f\u5cad", "\u5b63\u65e0\u5fe7", "\u65b9\u4e88\u5b81", "\u8c22\u5f52\u96e8", "\u9646\u6e05\u77e5"
+  ]
+};
 
 const storyScripts = {
   opening: `
@@ -543,6 +593,7 @@ function defaultState() {
   return {
     seenOpening: false,
     playerName: "",
+    playerGender: "",
     unlockedChapters: ["1-1"],
     completedChapters: [],
     unlockedGhosts: [...soulRoster],
@@ -804,6 +855,7 @@ class StoryEngine {
 let chapterOneData = null;
 
 const storyCharacterMap = {
+  "\u65c1\u767d": "\u65c1\u767d.png",
   "\u4e5d\u697c\u5b88\u7ae5": "\u4e5d\u697c\u5b88\u7ae5.\u963f\u96bc.png",
   "\u53f8\u5e10\u5a18": "\u53f8\u5e10\u5a18\u00b7\u8d64\u5e54.png",
   "\u5e03\u5076\u6028\u7ae5": "\u5e03\u5076\u6028\u7ae5.png",
@@ -820,6 +872,8 @@ const storyCharacterMap = {
 };
 
 const storyPortraitMap = {
+  "\u65c1\u767d_\u7acb\u7ed8": "\u65c1\u767d.png",
+  "\u73a9\u5bb6_\u7acb\u7ed8": "player",
   "\u4e5d\u697c\u5b88\u7ae5_\u7acb\u7ed8": "\u4e5d\u697c\u5b88\u7ae5.\u963f\u96bc.png",
   "\u53f8\u5e10\u5a18_\u7acb\u7ed8": "\u53f8\u5e10\u5a18\u00b7\u8d64\u5e54.png",
   "\u5e03\u5076\u6028\u7ae5_\u7acb\u7ed8": "\u5e03\u5076\u6028\u7ae5.png",
@@ -840,9 +894,13 @@ function storyAssetUrl(kind, file) {
 function resolveStoryCharacter(row) {
   const speaker = row?.["\u8bf4\u8bdd\u4eba"] || "";
   const portrait = row?.["\u7acb\u7ed8\u540d"] || "";
-  const file = storyPortraitMap[portrait] || storyCharacterMap[speaker];
-  if (!file || speaker === "\u65c1\u767d" || speaker === "\u73a9\u5bb6") return null;
-  return { name: speaker, pos: "right", src: storyAssetUrl("chars", file) };
+  let file = storyPortraitMap[portrait] || storyCharacterMap[speaker];
+  if (file === "player" || speaker === "\u73a9\u5bb6") {
+    file = state.playerGender === "female" ? "\u5973\u4e3b.png" : "\u7537\u4e3b.png";
+  }
+  if (!file) return null;
+  const pos = speaker === "\u73a9\u5bb6" || speaker === "\u65c1\u767d" ? "left" : "right";
+  return { name: speaker, pos, src: storyAssetUrl("chars", file) };
 }
 
 async function loadChapterOneData() {
@@ -993,7 +1051,7 @@ function setBackground(name) {
   const bg = document.getElementById("bgLayer");
   bg.className = "bg-layer";
   if (name && (name.startsWith("./") || name.startsWith("/") || name.includes(".jpg") || name.includes(".png"))) {
-    bg.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.46)), url("${name}")`;
+    bg.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.22)), url("${name}")`;
   } else {
     bg.style.backgroundImage = "";
     bg.classList.add(`bg-${name || "building"}`);
@@ -1021,34 +1079,85 @@ function showPlayerNameModal(done) {
   const layer = document.getElementById("modalLayer");
   if (!layer) return;
   layer.className = "modal-layer name-entry-layer";
+  const gender = state.playerGender === "female" ? "female" : "male";
+  const names = playerNamePools[gender] || playerNamePools.male;
+  let currentName = state.playerName || names[Math.floor(Math.random() * names.length)];
   layer.innerHTML = `
     <article class="name-entry-modal">
-      <img class="name-entry-bg" src="./assets/chapter1/name/input_bg.jpg" alt="">
-      <h2>\u8bf7\u8f93\u5165\u4f60\u7684\u540d\u5b57</h2>
-      <label>\u59d3<input data-name-family maxlength="4" autocomplete="off"></label>
-      <label>\u540d<input data-name-given maxlength="6" autocomplete="off"></label>
-      <button class="name-random" type="button"><img src="./assets/chapter1/name/btn_02.png" alt=""><span>\u968f\u673a</span></button>
-      <button class="name-confirm" type="button"><img src="./assets/chapter1/name/btn_01.png" alt=""><span>\u786e\u5b9a</span></button>
+      <img class="name-entry-bg" src="./assets/onboarding/qumingxiaoguotu.png" alt="">
+      <div class="name-entry-panel">
+        <img src="./assets/onboarding/bg_naming_panel.png" alt="">
+        <strong>\u8bf7\u8f93\u5165\u4f60\u7684\u540d\u5b57</strong>
+        <button class="name-random" type="button" title="\u968f\u673a\u540d\u5b57">
+          <img src="./assets/onboarding/btn_random_name.png" alt="">
+        </button>
+        <button class="name-entry-value" type="button" title="\u5f53\u524d\u540d\u5b57"></button>
+        <p>\u540d\u5b57\u5c06\u51b3\u5b9a\u4f60\u5728 <em>9</em> \u53f7\u697c\u7684\u547d\u8fd0</p>
+        <button class="name-confirm" type="button">
+          <img src="./assets/onboarding/btn_common.png" alt="">
+          <span>\u8fdb\u5165\u8be1\u4e8b</span>
+        </button>
+      </div>
     </article>
   `;
-  const family = layer.querySelector("[data-name-family]");
-  const given = layer.querySelector("[data-name-given]");
-  const names = [["\u6b27\u9633", "\u5f80\u524d"], ["\u6797", "\u6df1"], ["\u8bb8", "\u5f52"], ["\u9648", "\u9ed8"]];
-  const applyName = ([a, b]) => {
-    family.value = a;
-    given.value = b;
+  const nameValue = layer.querySelector(".name-entry-value");
+  const applyName = name => {
+    currentName = name;
+    if (nameValue) nameValue.textContent = name;
   };
-  applyName(names[0]);
+  applyName(currentName);
   layer.querySelector(".name-random")?.addEventListener("click", () => applyName(names[Math.floor(Math.random() * names.length)]));
+  nameValue?.addEventListener("click", () => applyName(names[Math.floor(Math.random() * names.length)]));
   layer.querySelector(".name-confirm")?.addEventListener("click", () => {
-    const value = `${family.value || ""}${given.value || ""}`.trim() || "\u6b27\u9633\u5f80\u524d";
-    state.playerName = value;
+    state.playerName = currentName || names[0];
     saveState();
     updatePlayerNameDisplays();
     closeModal();
     done?.();
   });
-  family.focus();
+  updateUiDebugTargets();
+}
+
+function showRoleSelectModal(done) {
+  const layer = document.getElementById("modalLayer");
+  if (!layer) return;
+  let selectedGender = state.playerGender === "female" ? "female" : "male";
+  layer.className = "modal-layer role-select-layer";
+  layer.innerHTML = `
+    <section class="role-select-screen" aria-label="\u9009\u62e9\u89d2\u8272">
+      <img class="role-select-bg" src="./assets/onboarding/xuanjuexiaoguotu.png" alt="">
+      <button class="role-card role-card-male selected" data-gender="male" type="button" title="\u7537\u4e3b">
+        <img src="./assets/onboarding/bg_role_select_male.png" alt="">
+      </button>
+      <button class="role-card role-card-female" data-gender="female" type="button" title="\u5973\u4e3b">
+        <img src="./assets/onboarding/bg_role_select_female.png" alt="">
+      </button>
+      <button class="role-confirm" type="button">
+        <img src="./assets/onboarding/btn_common.png" alt="">
+        <span>\u786e\u8ba4\u8fdb\u5165</span>
+      </button>
+    </section>
+  `;
+  const syncSelection = () => {
+    layer.querySelectorAll("[data-gender]").forEach(card => {
+      card.classList.toggle("selected", card.dataset.gender === selectedGender);
+    });
+  };
+  layer.querySelectorAll("[data-gender]").forEach(card => {
+    card.addEventListener("click", () => {
+      selectedGender = card.dataset.gender;
+      syncSelection();
+    });
+  });
+  layer.querySelector(".role-confirm")?.addEventListener("click", () => {
+    state.playerGender = selectedGender;
+    state.playerName = "";
+    saveState();
+    closeModal();
+    done?.();
+  });
+  syncSelection();
+  updateUiDebugTargets();
 }
 
 async function startStory(scriptId, onEnd, snapshot = null) {
@@ -1165,6 +1274,7 @@ function openModule(tabName) {
   panel.classList.remove("panel-enter");
   requestAnimationFrame(() => panel.classList.add("panel-enter"));
   renderAll();
+  updateUiDebugTargets();
 }
 
 function showTitleScreen() {
@@ -1174,13 +1284,23 @@ function showTitleScreen() {
   document.getElementById("home").classList.add("hidden");
   document.getElementById("nav").classList.add("hidden");
   const hint = document.getElementById("enterHint");
-  hint.textContent = state.seenOpening ? "检测到本地存档：将进入主界面" : "新档案：将强制播放开篇剧情";
+  hint.textContent = state.seenOpening ? "检测到本地存档：将进入主界面" : "新档案：将进入第一章第一回";
 }
 
 function enterGame() {
   playBgm();
-  if (state.seenOpening) showHome();
-  else startStory("opening");
+  if (state.seenOpening) {
+    showHome();
+    return;
+  }
+  showRoleSelectModal(() => {
+    showPlayerNameModal(() => {
+      state.seenOpening = true;
+      unlockChapter("1-1");
+      saveState();
+      startStory("1-1");
+    });
+  });
 }
 
 function firstUnlockedStoryChapter() {
@@ -1532,6 +1652,14 @@ function currencyLabel(type) {
   return type === "gold" ? "\u91d1" : "\u7075";
 }
 
+function currencyIconPath(type) {
+  return type === "gold" ? "./assets/item_icons/icon_gold.png" : "./assets/item_icons/icon_spirit.png";
+}
+
+function summonCostMarkup(type, amount) {
+  return `<small><img src="${currencyIconPath(type)}" alt="${currencyLabel(type)}"><span>x${amount}</span></small>`;
+}
+
 function updateCurrencyDisplays(root = document) {
   root.querySelectorAll(".hub-gold-value, .story-hud-gold-value, .summon-gold span, .bag-art-gold span, .soul-gold span").forEach(el => {
     el.textContent = state.currency?.gold ?? 0;
@@ -1644,6 +1772,7 @@ function showRoundEnterModal(round) {
     startStory(round.id);
   });
   layer.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", closeModal));
+  updateUiDebugTargets();
 }
 
 function closeModal() {
@@ -1981,12 +2110,12 @@ function renderGachaTab() {
       <button class="summon-btn summon-once" type="button">
         <img src="./assets/summon_ui/btn_summon.png" alt="">
         <span>\u53ec\u5524\u4e00\u6b21</span>
-        <small>${currencyLabel(config.currency)} x${config.single}</small>
+        ${summonCostMarkup(config.currency, config.single)}
       </button>
       <button class="summon-btn summon-ten" type="button">
         <img src="./assets/summon_ui/btn_summon.png" alt="">
         <span>\u53ec\u5524\u5341\u6b21</span>
-        <small>${currencyLabel(config.currency)} x${config.ten}</small>
+        ${summonCostMarkup(config.currency, config.ten)}
       </button>
 
       <aside class="summon-pool-panel">
@@ -2089,7 +2218,7 @@ function showSummonResults(results) {
     <section class="summon-result-board">
       <div class="summon-result-grid">
         ${results.map((card, index) => `
-          <button class="summon-card rarity-${card.rarity}" type="button" style="--rarity:${card.color}; --delay:${index * 110}ms">
+          <button class="summon-card summon-${card.kind} rarity-${card.rarity}" type="button" style="--rarity:${card.color}; --delay:${index * 110}ms">
             <span class="summon-card-back"><img src="./assets/cards/card_back.png" alt=""></span>
             <span class="summon-card-front">
               <img src="${card.image}" alt="${card.name}">
@@ -2099,7 +2228,10 @@ function showSummonResults(results) {
           </button>
         `).join("")}
       </div>
-      <button class="summon-result-close" type="button">\u6536\u8d77</button>
+      <button class="summon-result-close" type="button">
+        <img src="./assets/onboarding/btn_common.png" alt="">
+        <span>\u6536\u8d77</span>
+      </button>
     </section>
     ${rare ? `
       <section class="summon-rare-show hidden rarity-${rare.rarity}">
@@ -2170,7 +2302,7 @@ function renderBagTab() {
     desc: selectedInfo.desc || "带有诡异气息的收容道具，可用于御魂系统养成与剧情推进。",
     route: selectedInfo.route || "可在御魂界面进行赠礼或献祭。"
   } : null;
-  const slotCount = isCardBag ? 15 : 25;
+  const slotCount = isCardBag ? 12 : 25;
   const cells = Array.from({ length: slotCount }, (_, index) => {
     const item = visible[index];
     const selectedClass = item && item.id === activeBagItemId ? "selected" : "";
@@ -2509,6 +2641,8 @@ function renderStoryTab() {
       const unlocked = !round.locked && state.unlockedChapters.includes(round.id);
       const done = state.completedChapters.includes(round.id);
       const current = round.id === activeRound.id;
+      const turnLabel = `\u7b2c${index + 1}\u56de`;
+      const turnName = unlocked ? (round.title || turnLabel) : "\u672a\u89e3\u9501";
       const row = document.createElement("button");
       row.className = `story-turn-card ${unlocked ? "" : "locked"} ${done ? "done" : ""} ${current ? "current" : ""}`;
       row.dataset.roundIndex = String(index);
@@ -2518,8 +2652,8 @@ function renderStoryTab() {
       row.innerHTML = `
         <img src="./assets/story_ui/${unlocked ? "turn_current" : "turn_locked"}.png" alt="">
         <div class="story-turn-copy">
-          <strong>\u7b2c${index + 1}\u56de</strong>
-          <span>${unlocked ? round.title : "\u672a\u89e3\u9501"}</span>
+          <strong>${turnLabel}</strong>
+          <span>${turnName}</span>
         </div>
       `;
       turnRoot.appendChild(row);
